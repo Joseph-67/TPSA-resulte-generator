@@ -228,19 +228,24 @@ for i in range(1, 5):
 chart_row = summary_row + 7
 
 # Prepare data for chart (exclude header for categories)
-data = Reference(ws, min_col=6, min_row=table_start_row + 1, max_row=table_start_row + len(subjects))
+data = Reference(ws, min_col=6, min_row=table_start_row, max_row=table_start_row + len(subjects))
 # Explicitly set all subjects as categories for x-axis
-cats = Reference(ws, min_col=1, min_row=table_start_row + 1, max_row=table_start_row + len(subjects))
+cats = Reference(ws, min_col=1, min_row=table_start_row+1, max_row=table_start_row + len(subjects))
 
 chart = BarChart()
-chart.type = "col"
+# chart.type = "col"
 chart.title = "Academic Performance (Third Term)"
 chart.x_axis.title = "Subjects"
 chart.y_axis.title = "Total Score"
 chart.height = 9
 chart.width = 12
-chart.style = 1
-chart.legend = None
+# chart.style = 10
+chart.legend = None  # Hide legend for clarity
+chart.y_axis.majorGridlines = None  # Hide gridlines for cleaner look
+chart.x_axis.majorGridlines = None  # Hide x-axis gridlines
+chart.x_axis.majorTickMark = "in"  # Set x-axis ticks to be inside
+# Add data to chart
+
 
 chart.add_data(data, titles_from_data=True)
 chart.set_categories(cats)
@@ -249,6 +254,8 @@ chart.set_categories(cats)
 chart.x_axis.majorTickMark = "out"
 chart.x_axis.tickLblSkip = 1  # Show every label
 
+# chart.dataLabels = DataLabelList()
+# chart.dataLabels.showVal = True
 # Rotate subject labels for readability
 chart.x_axis.textRotation = 45
 
