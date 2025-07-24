@@ -1,4 +1,17 @@
 subjects = [
-    "Mathematics", "English", "Biology", "Physics", "Chemistry", "Geography", "Economics",
-    "Agriculture", "Civic Education", "History", "Computer", "Fine Arts", "French", "Physical Education"
+    "MATHEMATICS",
+    "ENGLISH LANGUAGE",
+    "PHONICS",
+    "HANDWRITING",
+    "SOCIAL HABIT",
+    "SECURITY EDUCATION",
+    "SCIENCE SKILLLS",
+    "PHYSICAL AND HEALTH EDUCATION",
+    "FOOD AND NUTRITION",
+    "WATER AND ENVIRONMENTAL SANITATION",
+    "RELIGIOUS STUDIES (C.R.S)",
+    "VERBAL REASONING",
+    "QUANTITATIVE REASONING",
+    "RHYMES",
+    "SENSORIAL"
 ]
