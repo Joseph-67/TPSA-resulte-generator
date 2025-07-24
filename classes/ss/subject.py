@@ -1,0 +1,30 @@
+ss_art_subjects = [
+    "MATHEMATICS",
+    "ENGLISH",
+    "GOVERNMENT",
+    "LITERATURE",
+    "AGRICULTURAL SCIENCE",
+    "C.R.S/I.R.S",
+    "GEOGRAPHY",
+    "ECONOMICS",
+    "COMPUTER STUDIES",
+    "PHONICS",
+    "CIVIC EDUCATION",
+    "MARKETING",
+    "BIOLOGY"
+]
+ss_science_subjects = [
+    "MATHEMATICS",
+    "ENGLISH",
+    "FURTHER MATHEMATICS",
+    "CHEMISTRY",
+    "AGRICULTURAL SCIENCE",
+    "PHYSICS",
+    "GEOGRAPHY",
+    "ECONOMICS",
+    "COMPUTER STUDIES",
+    "PHONICS",
+    "CIVIC EDUCATION",
+    "MARKETING",
+    "BIOLOGY"
+]

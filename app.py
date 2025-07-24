@@ -10,7 +10,7 @@ from openpyxl.chart.label import DataLabelList
 from openpyxl.chart.layout import Layout, ManualLayout
 # --- Sample student data for one student offering 14 subjects ---
 from classes.grade.subject import subjects
-from classes.grade.grade1 import students_data
+from classes.grade.gradeOneDiamond import students_data
 student_scores = [
     {"Subject": sub, "CA1": 0, "CA2": 0, "CA3": 0, "Exam": 0,
      "3rd Term": 0, "1st Term": 0, "2nd Term": 0} for sub in subjects
