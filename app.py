@@ -5,7 +5,8 @@ from openpyxl.drawing.image import Image
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.chart import BarChart, Reference
 from datetime import datetime
-
+from openpyxl.styles import Alignment
+from openpyxl.chart.label import DataLabelList
 # --- Sample student data for one student offering 14 subjects ---
 subjects = [
     "Mathematics", "English", "Biology", "Physics", "Chemistry", "Geography", "Economics",
@@ -60,7 +61,6 @@ logo.width, logo.height = 70, 70
 ws.add_image(logo, "L1")
 
 # --- 2. Student Bio Data ---
-from openpyxl.styles import Alignment
 bio_data = {
     "Name": "John Doe",
     "Admission No": "STA/234",
@@ -155,7 +155,7 @@ ws['L5'].border = border
 # Prepare keys in pairs
 items = list(bio_data.items())
 row = 3
-col_widths = {"A": 20, "B": 15, "C": 15, "D": 20}
+col_widths = {"A": 20, "B": 15, "C": 15, "D": 20, "K" : 16, "L": 20}
 
 for col, width in col_widths.items():
     ws.column_dimensions[col].width = width
@@ -204,7 +204,11 @@ ws[f"A{summary_row}"] = "Summary"
 ws[f"A{summary_row}"].font = title_font
 ws[f"A{summary_row}"].fill = section_fill
 ws[f"A{summary_row}"].alignment = center_align
+ws[f"A{summary_row}"].border = border
+ws[f"B{summary_row}"].border = border
+ws[f"A{summary_row}"].font = sub_header_font
 ws.row_dimensions[summary_row].height = 20
+ws.merge_cells(f"A{summary_row}:B{summary_row}")
 
 ws[f"A{summary_row+1}"] = "Total Score"
 ws[f"B{summary_row+1}"] = f"=SUM(F{table_start_row+1}:F{table_start_row+len(subjects)})"
@@ -215,47 +219,74 @@ ws[f"B{summary_row+3}"] = "To be filled"
 for i in range(1, 5):
     ws[f"A{summary_row+i}"].border = border
     ws[f"B{summary_row+i}"].border = border
+    ws[f"A{summary_row+i}"].font = title_font
+    ws[f"B{summary_row+i}"].font = title_font
 
 # --- 5. Graph (Performance Chart) ---
-chart_row = summary_row + 5
+# --- Academic Performance Chart (Improved) ---
+chart_row = summary_row + 7
 chart = BarChart()
-chart.title = "Performance Chart (Third Term)"
+chart.type = "col"
+chart.title = "Academic Performance (Third Term)".upper()
 chart.x_axis.title = "Subjects"
 chart.y_axis.title = "Scores"
-chart.height = 8
-chart.width = 18
+chart.height = 9
+chart.width = 9
+chart.style = 10
+chart.legend = None
 
+# Plot only the "Total" column for each subject
 data = Reference(ws, min_col=6, min_row=table_start_row, max_row=table_start_row + len(subjects))
 cats = Reference(ws, min_col=1, min_row=table_start_row + 1, max_row=table_start_row + len(subjects))
 chart.add_data(data, titles_from_data=True)
 chart.set_categories(cats)
+
+# Add data labels for clarity
+chart.dataLabels = DataLabelList()
+chart.dataLabels.showVal = True
+
 ws.add_chart(chart, f"A{chart_row}")
 
 # --- 6. Affective Domain ---
-affective_row = chart_row + 18
-ws[f"A{affective_row}"] = "Affective Domain"
-ws[f"A{affective_row}"].font = title_font
-ws[f"A{affective_row}"].fill = section_fill
-ws[f"A{affective_row}"].alignment = center_align
-affective_traits = ["Punctuality", "Neatness", "Honesty", "Attentiveness", "Politeness"]
+affective_row = summary_row
+ws[f"D{affective_row}"] = "Effort"
+ws[f"D{affective_row}"].font = title_font
+ws[f"D{affective_row}"].fill = section_fill
+ws[f"D{affective_row}"].alignment = center_align
+ws[f"D{affective_row}"].border = border
+affective_traits = ["Aesthetic Appreciation", "Attendance", "Creativity", "Honesty", "Initiative","Leadership","Neatness","Obedience", "Perserverance","Politeness","Self Control",  "Sense Of Responsibility", "Sociability", "Spirit Of Coordination"]
+for col in range(5):
+    ws.cell(row=affective_row, column=5 + col).value = col + 1
+    ws.cell(row=affective_row, column=5 + col).alignment = center_align
+    ws.cell(row=affective_row, column=5 + col).font = title_font
+    ws.cell(row=affective_row, column=5 + col).border = border
 for i, trait in enumerate(affective_traits):
-    ws[f"A{affective_row+1+i}"] = trait
-    ws[f"B{affective_row+1+i}"] = "5"
-    ws[f"A{affective_row+1+i}"].border = border
-    ws[f"B{affective_row+1+i}"].border = border
+    ws[f"D{affective_row+1+i}"] = trait
+    ws[f"E{affective_row+1+i}"] = "✓"
+    ws[f"D{affective_row+1+i}"].border = border
+    for col in range(5):
+        ws.cell(row=affective_row+1+i, column=5 + col).border = border
+
 
 # --- 7. Psychomotor Skills ---
 psy_row = affective_row + len(affective_traits) + 2
-ws[f"A{psy_row}"] = "Psychomotor Skills"
-ws[f"A{psy_row}"].font = sub_header_font
-ws[f"A{psy_row}"].fill = section_fill
-ws[f"A{psy_row}"].alignment = center_align
-psy_traits = ["Sports", "Craft", "Drawing", "Music", "Drama"]
+ws[f"D{psy_row}"] = "Psychomotor Skills"
+ws[f"D{psy_row}"].font = title_font
+ws[f"D{psy_row}"].fill = section_fill
+ws[f"D{psy_row}"].alignment = center_align
+ws[f"D{psy_row}"].border = border
+for col in range(5):
+    ws.cell(row=psy_row, column=5 + col).value = col + 1
+    ws.cell(row=psy_row, column=5 + col).alignment = center_align
+    ws.cell(row=psy_row, column=5 + col).font = title_font
+    ws.cell(row=psy_row, column=5 + col).border = border
+psy_traits = ["Communication Skills", "Craft", "Games/Sports", "Handwriting", "Handling Of Tools", "Musical Skills", "Painting/Drawing"]
 for i, trait in enumerate(psy_traits):
-    ws[f"A{psy_row+1+i}"] = trait
-    ws[f"B{psy_row+1+i}"] = "5"
-    ws[f"A{psy_row+1+i}"].border = border
-    ws[f"B{psy_row+1+i}"].border = border
+    ws[f"D{psy_row+1+i}"] = trait
+    ws[f"E{psy_row+1+i}"] = "✓"
+    ws[f"D{psy_row+1+i}"].border = border
+    for col in range(5):
+        ws.cell(row=psy_row+1+i, column=5 + col).border = border
 
 # --- 8. Remarks & Signature Section ---
 remark_row = psy_row + len(psy_traits) + 2
@@ -266,13 +297,17 @@ ws[f"B{remark_row+2}"] = datetime.today().strftime('%d-%m-%Y')
 for i in range(3):
     ws[f"A{remark_row+i}"].border = border
     ws[f"B{remark_row+i}"].border = border
+    ws.merge_cells(start_row=remark_row + i, start_column=1, end_row=remark_row + i, end_column=12)
 
 # --- 9. Grading Scale ---
-grade_row = remark_row + 4
-ws[f"A{grade_row}"] = "Grading Scale (Legend)"
-ws[f"A{grade_row}"].font = sub_header_font
-ws[f"A{grade_row}"].fill = section_fill
-ws[f"A{grade_row}"].alignment = center_align
+grade_row = summary_row
+ws[f"K{grade_row}"] = "Grading Scale (Legend)"
+ws[f"K{grade_row}"].font = title_font
+ws[f"K{grade_row}"].fill = section_fill
+ws[f"K{grade_row}"].alignment = center_align
+ws[f"K{grade_row}"].border = border
+# ws.merge_cells("K{grade_row}:L{grade_row}")
+ws.merge_cells(f"K{grade_row}:L{grade_row}")
 grades = {
     "A": "75 - 100 (Excellent)",
     "B": "60 - 74 (Very Good)",
@@ -282,10 +317,10 @@ grades = {
     "F": "0 - 39 (Poor)"
 }
 for i, (grade, meaning) in enumerate(grades.items()):
-    ws[f"A{grade_row+1+i}"] = grade
-    ws[f"B{grade_row+1+i}"] = meaning
-    ws[f"A{grade_row+1+i}"].border = border
-    ws[f"B{grade_row+1+i}"].border = border
+    ws[f"K{grade_row+1+i}"] = grade
+    ws[f"L{grade_row+1+i}"] = meaning
+    ws[f"K{grade_row+1+i}"].border = border
+    ws[f"L{grade_row+1+i}"].border = border
 
 # --- Page Setup for Printing ---
 ws.page_setup.orientation = ws.ORIENTATION_PORTRAIT
@@ -295,4 +330,4 @@ ws.page_margins.right = 0.3
 ws.page_margins.top = 0.5
 ws.page_margins.bottom = 0.5
 
-wb.save("John_Doe_Report.xlsx")
+wb.save("Report_Card_Template.xlsx")
