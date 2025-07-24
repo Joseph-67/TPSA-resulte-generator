@@ -1,0 +1,14 @@
+grade_subjects = [
+    "MATHEMATICS",
+    "ENGLISH LANGUAGE",
+    "PHONICS",
+    "BASIC SCIENCE & TECHNOLOGY",
+    "NATIONAL VALUES",
+    "PRE-VOCATIONAL STUDIES",
+    "RELIGIOUS STUDIES (C.R.S/I.R.S)",
+    "C.C.A",
+    "HISTORY",
+    "NIGERIAN LANGUAGE (HAUSA)",
+    "FRENCH",
+    "HAND WRITING"
+]

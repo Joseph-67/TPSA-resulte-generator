@@ -1,0 +1,15 @@
+ss_science_subjects = [
+    "MATHEMATICS",
+    "ENGLISH",
+    "FURTHER MATHEMATICS",
+    "CHEMISTRY",
+    "AGRICULTURAL SCIENCE",
+    "PHYSICS",
+    "GEOGRAPHY",
+    "ECONOMICS",
+    "COMPUTER STUDIES",
+    "PHONICS",
+    "CIVIC EDUCATION",
+    "MARKETING",
+    "BIOLOGY"
+]
