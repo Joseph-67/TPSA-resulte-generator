@@ -7,6 +7,7 @@ from openpyxl.chart import BarChart, Reference
 from datetime import datetime
 from openpyxl.styles import Alignment
 from openpyxl.chart.label import DataLabelList
+from openpyxl.chart.layout import Layout, ManualLayout
 # --- Sample student data for one student offering 14 subjects ---
 subjects = [
     "Mathematics", "English", "Biology", "Physics", "Chemistry", "Geography", "Economics",
@@ -155,7 +156,7 @@ ws['L5'].border = border
 # Prepare keys in pairs
 items = list(bio_data.items())
 row = 3
-col_widths = {"A": 20, "B": 15, "C": 15, "D": 20, "K" : 16, "L": 20}
+col_widths = {"A": 40.71, "B": 15, "C": 15, "D": 20, "K" : 16, "L": 20}
 
 for col, width in col_widths.items():
     ws.column_dimensions[col].width = width
@@ -164,7 +165,7 @@ for i in range(0, len(items), 2):
     ws.row_dimensions[row].height = 20
     row += 1
 # --- 3. Academic Performance Table ---
-ws['A7'] = "Academic Performance"
+ws['A7'] = "Academic Performance".upper()
 ws['A7'].font = sub_header_font
 ws['A7'].fill = section_fill
 ws['A7'].alignment = center_align
@@ -172,7 +173,7 @@ ws.row_dimensions[7].height = 22
 table_start_row = row + 1
 columns = ["Subject", "CA1", "CA2", "CA3", "Exam", "Total", "1st Term", "2nd Term", "3rd Term Total", "Grade", "Position", "Remark"]
 for col_num, col_name in enumerate(columns, 1):
-    cell = ws.cell(row=table_start_row, column=col_num, value=col_name)
+    cell = ws.cell(row=table_start_row, column=col_num, value=col_name.upper())
     cell.font = title_font
     cell.alignment = center_align
     cell.fill = section_fill
@@ -182,7 +183,7 @@ ws.row_dimensions[table_start_row].height = 30
 for i, subject in enumerate(subjects):
     r = table_start_row + 1 + i
     row_data = df.iloc[i]
-    ws.cell(row=r, column=1).value = row_data["Subject"]
+    ws.cell(row=r, column=1).value = row_data["Subject"].upper()
     ws.cell(row=r, column=2).value = row_data["CA1"]
     ws.cell(row=r, column=3).value = row_data["CA2"]
     ws.cell(row=r, column=4).value = row_data["CA3"]
@@ -200,7 +201,7 @@ for i, subject in enumerate(subjects):
 
 # --- 4. Summary Section ---
 summary_row = table_start_row + len(subjects) + 2
-ws[f"A{summary_row}"] = "Summary"
+ws[f"A{summary_row}"] = "Summary".upper()
 ws[f"A{summary_row}"].font = title_font
 ws[f"A{summary_row}"].fill = section_fill
 ws[f"A{summary_row}"].alignment = center_align
@@ -210,7 +211,7 @@ ws[f"A{summary_row}"].font = sub_header_font
 ws.row_dimensions[summary_row].height = 20
 ws.merge_cells(f"A{summary_row}:B{summary_row}")
 
-ws[f"A{summary_row+1}"] = "Total Score"
+ws[f"A{summary_row+1}"] = "Total Score".upper()
 ws[f"B{summary_row+1}"] = f"=SUM(F{table_start_row+1}:F{table_start_row+len(subjects)})"
 ws[f"A{summary_row+2}"] = "Average Score"
 ws[f"B{summary_row+2}"] = f"=AVERAGE(F{table_start_row+1}:F{table_start_row+len(subjects)})"
@@ -223,33 +224,61 @@ for i in range(1, 5):
     ws[f"B{summary_row+i}"].font = title_font
 
 # --- 5. Graph (Performance Chart) ---
-# --- Academic Performance Chart (Improved) ---
+# Place chart below summary section
 chart_row = summary_row + 7
+
+# Prepare data for chart (exclude header for categories)
+data = Reference(ws, min_col=6, min_row=table_start_row + 1, max_row=table_start_row + len(subjects))
+# Explicitly set all subjects as categories for x-axis
+cats = Reference(ws, min_col=1, min_row=table_start_row + 1, max_row=table_start_row + len(subjects))
+
 chart = BarChart()
 chart.type = "col"
-chart.title = "Academic Performance (Third Term)".upper()
+chart.title = "Academic Performance (Third Term)"
 chart.x_axis.title = "Subjects"
-chart.y_axis.title = "Scores"
+chart.y_axis.title = "Total Score"
 chart.height = 9
-chart.width = 9
-chart.style = 10
+chart.width = 12
+chart.style = 1
 chart.legend = None
 
-# Plot only the "Total" column for each subject
-data = Reference(ws, min_col=6, min_row=table_start_row, max_row=table_start_row + len(subjects))
-cats = Reference(ws, min_col=1, min_row=table_start_row + 1, max_row=table_start_row + len(subjects))
 chart.add_data(data, titles_from_data=True)
 chart.set_categories(cats)
 
-# Add data labels for clarity
-chart.dataLabels = DataLabelList()
-chart.dataLabels.showVal = True
+# Ensure all subject names are shown on x-axis
+chart.x_axis.majorTickMark = "out"
+chart.x_axis.tickLblSkip = 1  # Show every label
 
+# Rotate subject labels for readability
+chart.x_axis.textRotation = 45
+
+# Improve chart layout: center chart, increase spacing, adjust axis and title font sizes
+chart.layout = Layout(
+    manualLayout=ManualLayout(
+        x=0.0,  # Center horizontally (0.0 = left, 1.0 = right)
+        y=0.05,  # Move a bit down from the top
+        h=0.9,   # Height as fraction of plot area
+        w=0.9    # Width as fraction of plot area
+    )
+)
+chart.x_axis.title.txPr = None  # Remove text properties to use default
+chart.y_axis.title.txPr = None
+chart.title.txPr = None
+chart.x_axis.title.font = Font(size=12, bold=True)
+chart.y_axis.title.font = Font(size=12, bold=True)
+chart.title.font = Font(size=14, bold=True)
+chart.gapWidth = 150  # Increase gap between bars for clarity
+
+# Explicitly set x and y axis labels (redundant, but ensures labels are set)
+chart.x_axis.title = "Subjects"
+chart.y_axis.title = "Total Score"
+
+# Insert chart
 ws.add_chart(chart, f"A{chart_row}")
 
 # --- 6. Affective Domain ---
 affective_row = summary_row
-ws[f"D{affective_row}"] = "Effort"
+ws[f"D{affective_row}"] = "Effort".upper()
 ws[f"D{affective_row}"].font = title_font
 ws[f"D{affective_row}"].fill = section_fill
 ws[f"D{affective_row}"].alignment = center_align
@@ -261,7 +290,7 @@ for col in range(5):
     ws.cell(row=affective_row, column=5 + col).font = title_font
     ws.cell(row=affective_row, column=5 + col).border = border
 for i, trait in enumerate(affective_traits):
-    ws[f"D{affective_row+1+i}"] = trait
+    ws[f"D{affective_row+1+i}"] = trait.upper()
     ws[f"E{affective_row+1+i}"] = "✓"
     ws[f"D{affective_row+1+i}"].border = border
     for col in range(5):
