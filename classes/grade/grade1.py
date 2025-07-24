@@ -37,7 +37,8 @@ class_data = {
     "Resumption Date": "2024-09-01",
     "Closing Date": "2025-07-01",
     "Total Students": len(students_data),
-    "Average Attendance": 95.0  # You can update this value dynamically if needed
+    "Average Attendance": 95.0,  # You can update this value dynamically if needed
+    "Coordinator": "Head Teacher",  # Placeholder
 }
 
 # Output both variables

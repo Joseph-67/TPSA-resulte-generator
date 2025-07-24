@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.drawing.image import Image
@@ -10,7 +11,7 @@ from openpyxl.chart.label import DataLabelList
 from openpyxl.chart.layout import Layout, ManualLayout
 # --- Sample student data for one student offering 14 subjects ---
 from classes.grade.subject import subjects
-from classes.grade.grade1 import students_data
+from classes.grade.grade1 import students_data, class_data
 student_scores = [
     {"Subject": sub, "CA1": 0, "CA2": 0, "CA3": 0, "Exam": 0,
      "3rd Term": 0, "1st Term": 0, "2nd Term": 0} for sub in subjects
@@ -47,14 +48,14 @@ for student in students_data:
     )
 
     # --- 1. Sheet Title & Header ---
-    ws.merge_cells('A1:L1')
+    ws.merge_cells('A1:M1')
     ws['A1'] = "TOPSTEPS ACADEMY"
     ws['A1'].font = header_font
     ws['A1'].alignment = center_align
     ws.row_dimensions[1].height = 30
 
     # --- Sub Header Section ---
-    ws.merge_cells('A2:L2')
+    ws.merge_cells('A2:M2')
     ws['A2'] = "SECOND TERM 2024/2025 SESSION ACADEMIC REPORT"
     ws['A2'].font = sub_header_font
     ws['A2'].alignment = center_align
@@ -64,23 +65,23 @@ for student in students_data:
     # Insert logo
     logo = Image("tpsa_logo.png")
     logo.width, logo.height = 70, 70
-    ws.add_image(logo, "L1")
+    ws.add_image(logo, "M1")
 
     # --- 2. Student Bio Data ---
 
 
     ws.merge_cells('B3:F3')
     ws.merge_cells('G3:H3')
-    ws.merge_cells('I3:L3')
+    ws.merge_cells('I3:M3')
     ws.merge_cells('B4:C4')
     ws.merge_cells('E4:F4')
     ws.merge_cells('G4:H4')
-    ws.merge_cells('I4:L4')
-    ws.merge_cells('B5:L5')
-    ws.merge_cells('A7:L7')
+    ws.merge_cells('I4:M4')
+    ws.merge_cells('B5:M5')
+    ws.merge_cells('A7:M7')
 
-    ws['A3'] = "Student Name: "
-    ws['B3'] = student["Name"]
+    ws['A3'] = "Student Name: ".upper()
+    ws['B3'] = student["Name"].upper()
     ws['A3'].font = title_font
     ws['B3'].font = title_font
     ws['A3'].alignment = Alignment(horizontal="right")
@@ -91,7 +92,7 @@ for student in students_data:
     ws['D3'].border = border
     ws['E3'].border = border
     ws['F3'].border = border
-    ws['G3'] = "Admission No: "
+    ws['G3'] = "Admission No: ".upper()
     ws['I3'] = student["Admission No"]
     ws['G3'].font = title_font
     ws['I3'].font = title_font
@@ -103,8 +104,9 @@ for student in students_data:
     ws['J3'].border = border
     ws['K3'].border = border
     ws['L3'].border = border
-    ws['A4'] = "Class: "
-    ws['B4'] = student["Class"]
+    ws['M3'].border = border
+    ws['A4'] = "Class: ".upper()
+    ws['B4'] = class_data["Class"].upper()
     ws['A4'].font = title_font
     ws['B4'].font = title_font
     ws['A4'].alignment = Alignment(horizontal="right")
@@ -112,15 +114,15 @@ for student in students_data:
     ws['A4'].border = border
     ws['B4'].border = border
     ws['C4'].border = border
-    ws['D4'] = "Section: "
-    ws['E4'] = student["Section"]
+    ws['D4'] = "Section: ".upper()
+    ws['E4'] = student["Section"].upper()
     ws['D4'].font = title_font
     ws['E4'].font = title_font
     ws['D4'].alignment = Alignment(horizontal="right")
     ws['E4'].alignment = center_align
     ws['D4'].border = border
     ws['E4'].border = border
-    ws['G4'] = "Number In Class: "
+    ws['G4'] = "Number In Class: ".upper()
     ws['I4'] = len(students_data)
     ws['G4'].font = title_font
     ws['I4'].font = title_font
@@ -132,8 +134,9 @@ for student in students_data:
     ws['J4'].border = border
     ws['K4'].border = border
     ws['L4'].border = border
-    ws['A5'] = "Resumption Date: "
-    ws['B5'] = datetime.today().strftime('%d-%m-%Y')
+    ws['M4'].border = border
+    ws['A5'] = "Resumption Date: ".upper()
+    ws['B5'] = class_data["Resumption Date"]
     ws['A5'].font = title_font
     ws['B5'].font = title_font
     ws['A5'].alignment = Alignment(horizontal="right")
@@ -150,10 +153,11 @@ for student in students_data:
     ws['J5'].border = border
     ws['K5'].border = border
     ws['L5'].border = border
+    ws['M5'].border = border
     # Prepare keys in pairs
     items = list(student.items())
     row = 3
-    col_widths = {"A": 40.71, "B": 15, "C": 15, "D": 25, "E" : 15, "K" : 16, "L": 20, "I": 30}
+    col_widths = {"A": 40.71, "B": 15, "C": 15, "D": 25, "E" : 15, "F": 15, "G": 15, "H": 15, "I": 15, "J": 16, "K" : 15, "L": 16, "M": 30}
 
     for col, width in col_widths.items():
         ws.column_dimensions[col].width = width
@@ -170,7 +174,7 @@ for student in students_data:
     table_start_row = row + 1
     columns = [
         "Subject", "CA1 (20%)", "CA2 (20%)", "CA3 (20%)", "Exam (40%)",
-        "3rd Term Total", "1st Term", "2nd Term", "Cumulative Total",
+        "3rd Term Total", "Class Average", "1st Term", "2nd Term", "Cumulative Total",
         "Grade", "Position", "Remark"
     ]
     for col_num, col_name in enumerate(columns, 1):
@@ -190,16 +194,19 @@ for student in students_data:
         ws.cell(row=r, column=4).value = row_data["CA3"]
         ws.cell(row=r, column=5).value = row_data["Exam"]
         # 3rd Term Total: weighted sum
-        ws.cell(row=r, column=6).value = f"=B{r}+C{r}+D{r}+E{r}"
-        ws.cell(row=r, column=7).value = row_data["1st Term"]
-        ws.cell(row=r, column=8).value = row_data["2nd Term"]
+        ws.cell(row=r, column=6).value = f"=ROUND(B{r}*0.2+C{r}*0.2+D{r}*0.2+E{r}*0.4, 1)"
+        # Class Average (dummy, can be replaced with actual average if available)
+        ws.cell(row=r, column=7).value = None  # Placeholder for class average
+        # 1st Term and 2nd Term scores (dummy, can be replaced with
+        ws.cell(row=r, column=8).value = row_data["1st Term"]
+        ws.cell(row=r, column=9).value = row_data["2nd Term"]
         # Cumulative Total: sum of all terms
-        ws.cell(row=r, column=9).value = f"=F{r}+G{r}+H{r}"
+        ws.cell(row=r, column=10).value = f"=F{r}+H{r}+I{r}"
         # Grade based on 3rd Term Total
-        ws.cell(row=r, column=10).value = f'''=IF(F{r}>=75,"A",IF(F{r}>=60,"B",IF(F{r}>=50,"C",IF(F{r}>=45,"D",IF(F{r}>=40,"E","F")))))'''
-        ws.cell(row=r, column=11).value = ""
-        ws.cell(row=r, column=12).value = f'''=IF(J{r}="A","Excellent",IF(J{r}="B","Very Good",IF(J{r}="C","Good",IF(J{r}="D","Fair",IF(J{r}="E","Weak","Poor")))))'''
-        for c in range(1, 13):
+        ws.cell(row=r, column=11).value = f'''=IF(F{r}>=75,"A",IF(F{r}>=60,"B",IF(F{r}>=50,"C",IF(F{r}>=45,"D",IF(F{r}>=40,"E","F")))))'''
+        ws.cell(row=r, column=12).value = ""  # Position (to be filled later)
+        ws.cell(row=r, column=13).value = f'''=IF(K{r}="A","Excellent",IF(K{r}="B","Very Good",IF(K{r}="C","Good",IF(K{r}="D","Fair",IF(K{r}="E","Weak","Poor")))))'''
+        for c in range(1, 14):
             ws.cell(row=r, column=c).alignment = center_align
             ws.cell(row=r, column=c).border = border
 
@@ -216,9 +223,9 @@ for student in students_data:
     ws.merge_cells(f"A{summary_row}:B{summary_row}")
 
     ws[f"A{summary_row+1}"] = "Total Score".upper()
-    ws[f"B{summary_row+1}"] = f"=SUM(F{table_start_row+1}:F{table_start_row+len(subjects)})"
+    ws[f"B{summary_row+1}"] = f'=ROUND(SUM(F{table_start_row+1}:F{table_start_row+len(subjects)}), 1)'
     ws[f"A{summary_row+2}"] = "Average Score".upper()
-    ws[f"B{summary_row+2}"] = f"=AVERAGE(F{table_start_row+1}:F{table_start_row+len(subjects)})"
+    ws[f"B{summary_row+2}"] = f"=ROUND(AVERAGE(F{table_start_row+1}:F{table_start_row+len(subjects)}), 1)"
     ws[f"A{summary_row+3}"] = "Grade".upper()
     ws[f"B{summary_row+3}"] = f'''=IF(B{summary_row+2}>=75,"A",IF(B{summary_row+2}>=60,"B",IF(B{summary_row+2}>=50,"C",IF(B{summary_row+2}>=45,"D",IF(B{summary_row+2}>=40,"E","F")))))'''
     ws[f"A{summary_row+4}"] = "Position in Class".upper()
@@ -228,6 +235,7 @@ for student in students_data:
         ws[f"B{summary_row+i}"].border = border
         ws[f"A{summary_row+i}"].font = title_font
         ws[f"B{summary_row+i}"].font = title_font
+        ws[f"B{summary_row+i}"].alignment = Alignment('right')
 
     # --- 5. Graph (Performance Chart) ---
     # Place chart below summary section
@@ -333,32 +341,33 @@ for student in students_data:
 
     # --- 8. Remarks & Signature Section ---
     remark_row = psy_row + len(psy_traits) + 2
-    ws[f"A{remark_row}"] = "Head Teacher's Remark:".upper()
+    ws[f"A{remark_row}"] = f"{class_data['Coordinator']}'s Remark:".upper()
     ws[f"A{remark_row+1}"] = "Parent/Guardian's Remark:".upper()
     ws[f"A{remark_row+2}"] = "Date:".upper()
     ws[f"B{remark_row+2}"] = datetime.today().strftime('%d-%m-%Y')
     for i in range(3):
         ws[f"A{remark_row+i}"].border = border
         ws[f"A{remark_row+i}"].font = title_font
-        ws[f"A{remark_row+i}"].alignment = Alignment(horizontal="right")
+        ws[f"A{remark_row+i}"].alignment = Alignment(horizontal="left")
         ws[f"A{remark_row+i}"].fill = section_fill
         ws.row_dimensions[remark_row + i].height = 22
         ws[f"B{remark_row+i}"].border = border
-        ws[f"B{remark_row+i}"].alignment = Alignment(horizontal="right")
+        ws[f"B{remark_row+i}"].alignment = Alignment(horizontal="left")
         ws[f"B{remark_row+i}"].font = title_font
         ws[f"B{remark_row+i}"].fill = section_fill
-        ws[f"B{remark_row+i}"].value = "To be filled"
+        ws[f"B{remark_row+i}"].value = "To be filled".upper()
         ws[f"C{remark_row+i}"].border = border
 
-        ws.merge_cells(start_row=remark_row + i, start_column=1, end_row=remark_row + i, end_column=12)
+        ws.merge_cells(start_row=remark_row + i, start_column=1, end_row=remark_row + i, end_column=13)
 
     # --- 9. Grading Scale ---
     grade_row = summary_row
-    ws[f"K{grade_row}"] = "Grading Scale (Legend)"
+    ws[f"K{grade_row}"] = "Grading Scale (Legend)".upper()
     ws[f"K{grade_row}"].font = title_font
     ws[f"K{grade_row}"].fill = section_fill
     ws[f"K{grade_row}"].alignment = center_align
     ws[f"K{grade_row}"].border = border
+    ws.row_dimensions[grade_row].height = 25
     # ws.merge_cells("K{grade_row}:L{grade_row}")
     ws.merge_cells(f"K{grade_row}:L{grade_row}")
     grades = {
@@ -371,16 +380,23 @@ for student in students_data:
     }
     for i, (grade, meaning) in enumerate(grades.items()):
         ws[f"K{grade_row+1+i}"] = grade
-        ws[f"L{grade_row+1+i}"] = meaning
+        ws[f"L{grade_row+1+i}"] = meaning.upper()
         ws[f"K{grade_row+1+i}"].border = border
         ws[f"L{grade_row+1+i}"].border = border
 
     # --- Page Setup for Printing ---
     ws.page_setup.orientation = ws.ORIENTATION_PORTRAIT
     ws.page_setup.paperSize = ws.PAPERSIZE_A4
+    ws.page_setup.fitToWidth = 1  # Fit to one page wide
+    ws.page_setup.fitToHeight = 0  # Let data stretch vertically (no limit)
+    ws.page_setup.horizontalCentered = True
+    ws.page_setup.verticalCentered = False
     ws.page_margins.left = 0.3
     ws.page_margins.right = 0.3
     ws.page_margins.top = 0.5
     ws.page_margins.bottom = 0.5
 
-wb.save("Report_Card_Template.xlsx")
+folder_path = "template"
+os.makedirs(folder_path, exist_ok=True)
+
+wb.save(os.path.join(folder_path, f"{class_data['Class']}_Report_Card_Template.xlsx"))
