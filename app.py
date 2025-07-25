@@ -157,7 +157,7 @@ for student in students_data:
     # Prepare keys in pairs
     items = list(student.items())
     row = 3
-    col_widths = {"A": 40.71, "B": 15, "C": 15, "D": 25, "E" : 15, "F": 15, "G": 15, "H": 15, "I": 15, "J": 16, "K" : 15, "L": 16, "M": 30}
+    col_widths = {"A": 40.71, "B": 15, "C": 15, "D": 25, "E" : 15, "F": 15, "G": 15, "H": 15, "I": 15, "J": 16, "K" : 15, "L": 20, "M": 30}
 
     for col, width in col_widths.items():
         ws.column_dimensions[col].width = width
