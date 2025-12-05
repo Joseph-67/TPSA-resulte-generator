@@ -7,7 +7,7 @@ from datetime import datetime
 
 # Your data
 from classes.grade.subject import subjects
-from classes.grade.gradeTwodiamond import students_data, class_data
+from classes.grade.gradeOneGold import students_data, class_data
 
 # Create workbook
 wb = Workbook()
