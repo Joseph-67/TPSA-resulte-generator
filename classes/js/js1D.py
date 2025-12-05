@@ -35,7 +35,8 @@ class_data = {
     "Resumption Date": "2024-09-01",
     "Closing Date": "2025-07-01",
     "Total Students": len(students_data),
-    "Average Attendance": 93.0  # Adjust if needed
+    "Average Attendance": 93.0,  # Adjust if needed
+    "Coordinator": "Principal"
 }
 
 # Output both data

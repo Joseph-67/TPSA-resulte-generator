@@ -7,7 +7,7 @@ from datetime import datetime
 
 # Your data
 from classes.grade.subject import subjects
-from classes.grade.gradeOneGold import students_data, class_data
+from classes.grade.gradeOneDiamond import students_data, class_data
 
 # Create workbook
 wb = Workbook()
@@ -60,7 +60,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     if os.path.exists("tpsa_logo.png"):
         logo = Image("tpsa_logo.png")
         logo.width = logo.height = 80
-        ws.add_image(logo, "L1")
+        ws.add_image(logo, "A1")
 
     row = 3
 
@@ -116,7 +116,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
         show_1st = True
         show_2nd = False
     else:  # 3rd Term
-        headers = ["SUBJECT", "CA1(20%)", "CA2(20%)", "CA3(20%)", "EXAM(20%)", "TOTAL", "1ST TERM", "2ND TERM", "CUMULATIVE", "GRADE", "POSITION", "REMARK"]
+        headers = ["SUBJECT", "CA1(20%)", "CA2(20%)", "CA3(20%)", "EXAM(40%)", "TOTAL", "1ST TERM", "2ND TERM", "CUMULATIVE", "GRADE", "POSITION", "REMARK"]
         cols_total = 6
         show_1st = True
         show_2nd = True
@@ -235,36 +235,44 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
         ws[f'A{total_row+i}'].border = border
         ws[f'B{total_row+i}'].border = border
 
-        # Chart
-        chart_row = total_row + 6
-        chart = BarChart()
-        chart.title = f"{term_name} Term Performance"
-        chart.y_axis.title = "Score"
-        chart.x_axis.title = "Subjects"
-        chart.height = 9
-        chart.width = 12
-        chart.style = 12
-        chart.legend = None
-        chart.x_axis.majorTickMark = "in"
-        chart.x_axis.delete = False
-        chart.y_axis.delete = False
 
-        data = Reference(ws, min_col=6, min_row=table_start, max_row=table_start + len(subjects) - 1)
-        cats = Reference(ws, min_col=1, min_row=table_start + 1, max_row=table_start + len(subjects))
-        chart.add_data(data, titles_from_data=True)
-        chart.set_categories(cats)
-        chart.x_axis.textRotation = 45
-        chart.x_axis.title.txPr = None  # Remove text properties to use default
-        chart.y_axis.title.txPr = None
-        chart.title.txPr = None
-        chart.x_axis.title.font = Font(size=12, bold=True)
-        chart.y_axis.title.font = Font(size=12, bold=True)
-        chart.title.font = Font(size=14, bold=True)
-        chart.gapWidth = 150  # Increase gap between bars for clarity
+    # Chart (based on term)
+    chart_row = total_row + 6
+    chart = BarChart()
+    chart.title = f"{term_name.upper()} TERM PERFORMANCE"
+    chart.y_axis.title = "Score"
+    chart.x_axis.title = "Subjects"
+    chart.height = 9
+    chart.width = 12
+    chart.style = 12
+    chart.legend = None
+    chart.x_axis.majorTickMark = "in"
+    chart.x_axis.delete = False
+    chart.y_axis.delete = False
 
-        ws.add_chart(chart, f"A{chart_row}")
+    # Adjust data column based on term (use cumulative total)
+    if term_num == 1:
+        data_col = 6  # Column E (This Term Total)
+    elif term_num == 2:
+        data_col = 6  # Column F (Cumulative for 2nd term)
+    else:  # term_num == 3
+        data_col = 6  # Column G (Cumulative for 3rd term)
 
-    
+    data = Reference(ws, min_col=data_col, min_row=table_start, max_row=table_start + len(subjects) - 1)
+    cats = Reference(ws, min_col=1, min_row=table_start + 1, max_row=table_start + len(subjects))
+    chart.add_data(data, titles_from_data=True)
+    chart.set_categories(cats)
+    chart.x_axis.textRotation = 45
+    chart.x_axis.title.txPr = None
+    chart.y_axis.title.txPr = None
+    chart.title.txPr = None
+    chart.x_axis.title.font = Font(size=12, bold=True)
+    chart.y_axis.title.font = Font(size=12, bold=True)
+    chart.title.font = Font(size=14, bold=True)
+    chart.gapWidth = 150
+
+    ws.add_chart(chart, f"A{chart_row}")
+
     # --- 6. Affective Domain ---
     affective_row = summary_row
     ws[f"D{affective_row}"] = "Effort".upper()
@@ -308,8 +316,8 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
 
     # --- 8. Remarks & Signature Section ---
     remark_row = psy_row + len(psy_traits) + 2
-    ws[f"A{remark_row}"] = f"{class_data['Coordinator']}'s Remark:".upper()
-    ws[f"A{remark_row+1}"] = "Parent/Guardian's Remark:".upper()
+    ws[f"A{remark_row}"] = "Teacher's Remark:".upper()
+    ws[f"A{remark_row+1}"] = f"{class_data['Coordinator']}'s Remark:".upper()
     ws[f"A{remark_row+2}"] = "Date:".upper()
     ws[f"B{remark_row+2}"] = datetime.today().strftime('%d-%m-%Y')
     for i in range(3):
