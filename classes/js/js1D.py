@@ -1,16 +1,19 @@
 # List of students in JS1D
 js1D = [
-    "Adams Ayodeji ",
-    "Adams Emmanuel",
-    "Alfred Bethel Oluwafikayomi",
-    "Anaele Marvelous",
-    "Anaele Micheal",
-    "Owulo Onah",
-    "Noah Naomi",
-    "Matthas Gianne ",
-    "Sylvester C. Havilah",
-    "Uchenna Stacie",
-    "Amakoromo Faith"
+    "Abdulmajid S. Nabila",
+    "Adegoke O. Joshua",
+    "Akobeitopa Susan",
+    "Ayodeji E. Precious",
+    "Bassey O. Godwin",
+    "Chukwudi A. Greta",
+    "Ekpe V. Avina",
+    "Enoch M. Sharon",
+    "Gabriel K. Alvin",
+    "Jiriko N. Mathias",
+    "Lukas Purity",
+    "Seth S. Terry",
+    "Simon E. Favour",
+    "Sylvester A. Favour"
 ]
 
 # Generate individual student data
@@ -19,17 +22,17 @@ for i, name in enumerate(js1D, start=1):
     student = {
         "Name": name.strip(),
         "Admission No": f"JS1D/{str(i).zfill(3)}",
-        "Class": "JS 1 D",
+        "Class": "JS 1 ",
         "Term": "Third Term",
         "Session": "2024/2025",
         "Sex": "Unknown",  # Update if known
-        "Section": "General"
+        "Section": "Diamond"
     }
     students_data.append(student)
 
 # Class-wide data
 class_data = {
-    "Class": "JS 1 D",
+    "Class": "JS 1",
     "Term": "Third Term",
     "Session": "2024/2025",
     "Resumption Date": "2024-09-01",

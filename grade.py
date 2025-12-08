@@ -7,7 +7,7 @@ from datetime import datetime
 
 # Your data
 from classes.grade.subject import subjects
-from classes.grade.gradeOneDiamond import students_data, class_data
+from classes.grade.gradeFour import students_data, class_data
 
 # Create workbook
 wb = Workbook()
@@ -106,12 +106,12 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
 
     # Define columns based on term
     if term_num == 1:
-        headers = ["SUBJECT", "CA1 (20%)", "CA2 (20%)", "CA3 (20%)", "EXAM(40%)", "TOTAL", "AVERAGE", "GRADE", "POSITION", "REMARK"]
+        headers = ["SUBJECT", "CA1 (20%)", "CA2 (20%)", "CA3 (20%)", "EXAM(40%)", "TOTAL", "SUBJECT AVERAGE", "GRADE", "POSITION", "REMARK"]
         cols_total = 6
         show_1st = False
         show_2nd = False
     elif term_num == 2:
-        headers = ["SUBJECT", "CA1(20%)", "CA2(20%)", "CA3(20%)", "EXAM(40%)", "TOTAL", "1ST TERM", "CUMULATIVE", "GRADE", "POSITION", "REMARK"]
+        headers = ["SUBJECT", "CA1(20%)", "CA2(20%)", "CA3(20%)", "EXAM(40%)", "TOTAL", "SUBJECT AVERAGE", "CUMULATIVE", "GRADE", "POSITION", "REMARK"]
         cols_total = 6
         show_1st = True
         show_2nd = False
@@ -129,7 +129,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
         cell.border = border
     ws.row_dimensions[row].height = 30
     # row += 1
-   # Merge position/remark columns
+    # Merge position/remark columns
     if term_num == 1:
         print("row J", row)
         ws.merge_cells(f'J8:M8')
@@ -161,7 +161,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
         col_offset = 7
 
         # 1st Term Score (only show on 2nd & 3rd term)
-        if term_num >= 2 and show_1st:
+        if term_num >= 3 and show_1st:
             sheet_1st = safe_sheet_name(student["Name"].upper().replace(" ", "_"), "1ST_TERM")
             ws.cell(r, col_offset).value = f"='{sheet_1st}'!F{r}" if term_num >= 2 else ""
             col_offset += 1
@@ -210,6 +210,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     ws[f'A{row}'] = "SUMMARY"
     ws[f'A{row}'].font = sub_header_font
     ws[f'A{row}'].fill = gray_fill
+    ws[f'A{row}'].alignment = Alignment(horizontal="center")
 
     total_obtainable = len(subjects) * 100
     total_row = row + 1
@@ -225,10 +226,10 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     ws[f'A{total_row+3}'] = "Overall Grade"
     ws[f'B{total_row+3}'] = f'=IF(B{total_row+2}>=75,"A",IF(B{total_row+2}>=60,"B",IF(B{total_row+2}>=50,"C",IF(B{total_row+2}>=45,"D",IF(B{total_row+2}>=40,"E","F")))))'
 
-    ws[f'A{total_row+4}'] = "Position in Class"
-    ws[f'B{total_row+4}'] = "________"
+    # ws[f'A{total_row+4}'] = "Position in Class"
+    # ws[f'B{total_row+4}'] = "________"
 
-    for i in range(5):
+    for i in range(4):
         ws[f'A{total_row+i}'].font = title_font
         ws[f'B{total_row+i}'].font = title_font
         ws[f'B{total_row+i}'].alignment = Alignment(horizontal="right")
@@ -288,7 +289,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
         ws.cell(row=affective_row, column=5 + col).border = border
     for i, trait in enumerate(affective_traits):
         ws[f"D{affective_row+1+i}"] = trait.upper()
-        ws[f"E{affective_row+1+i}"] = "✓"
+        ws[f"E{affective_row+1}"] = "✓"
         ws[f"D{affective_row+1+i}"].border = border
         for col in range(5):
             ws.cell(row=affective_row+1+i, column=5 + col).border = border
@@ -309,7 +310,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     psy_traits = ["Communication Skills", "Craft", "Games/Sports", "Handwriting", "Handling Of Tools", "Musical Skills", "Painting/Drawing"]
     for i, trait in enumerate(psy_traits):
         ws[f"D{psy_row+1+i}"] = trait
-        ws[f"E{psy_row+1+i}"] = "✓"
+        ws[f"E{psy_row+1}"] = "✓"
         ws[f"D{psy_row+1+i}"].border = border
         for col in range(5):
             ws.cell(row=psy_row+1+i, column=5 + col).border = border

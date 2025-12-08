@@ -1,35 +1,43 @@
-# List of student names for Grade Three
+# List of student names for Grade One Gold
 gradeThree = [
-    "AbdulWaheed Muhsin",
-    "Agbonlahor Joy Owen",
-    "Akobe Itopa Sharon",
-    "Aliu Cherish",
-    "Ameh Benedict Ojongungwa",
-    "Awa Prudence Nkemruturym",
-    "Ayibaebi Brighen",
-    "Igbokwe Chibusoma Favour",
-    "Lucky Samuel Ejiro",
-    "Oigene  Steed Edoh ",
-    "Seth Tamara Sambo",
-    "Ubah Dominic Kachi",
-    "EZEANYA BELUSOCHUKWU FRANKLYN JNR"
+    "Abel Isabella",
+    "Adebayo Michael",
+    "Atom Z. Adel",
+    "Ayodele Adrian Ifeoluwa",
+    "Dickman Hyeh Hyehhirra",
+    "Ekpe Ivaan Hubert",
+    "Joseph Meekness",
+    "Kayode Boluwatife Gideon",
+    "Lar Chloe",
+    "Mathew Femiimilayo Paulina",
+    "Mohammad Abdulhameed Zakari",
+    "Ndackson Joel",
+    "Oforium Munachosom M.",
+    "Nze Ifeoma Mirabel",
+    "Onyedikachi Mmesoma Princess",
+    "Olapupo Ann Adesewa",
+    "Onyekachi Precious",
+    "Owulo Harris",
+    "Stephen Somtochukwu",
+    "Friday Kamasiochukwu Wisdom",
+    "Ayodele Peniel"
 ]
 
-# Generate student data for Grade Three
+# Generate student data for Grade One Gold
 students_data = []
 for i, name in enumerate(gradeThree, start=1):
     student = {
-        "Name": name.strip(),
-        "Admission No": f"G3/{str(i).zfill(3)}",
+        "Name": name,
+        "Admission No": f"G1G/{str(i).zfill(3)}",
         "Class": "Grade Three",
         "Term": "Third Term",
         "Session": "2024/2025",
-        "Sex": "Unknown",  # Placeholder
-        "Section": "General"
+        "Sex": "Unknown",  # Can be updated later
+        "Section": " "
     }
     students_data.append(student)
 
-# Class-level data for Grade Three
+# Class-level data for Grade One Gold
 class_data = {
     "Class": "Grade Three",
     "Term": "Third Term",
@@ -37,10 +45,11 @@ class_data = {
     "Resumption Date": "2024-09-01",
     "Closing Date": "2025-07-01",
     "Total Students": len(students_data),
-    "Average Attendance": 95.0
+    "Average Attendance": 95.0,
+    "Coordinator": "Head Teacher"
 }
 
-# Display the results
+# Displaying the results
 print("STUDENTS DATA:")
 for student in students_data:
     print(student)
