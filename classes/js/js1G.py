@@ -1,32 +1,36 @@
-# List of students in JS1D
-js1D = [
-     "Akwarandu Michael C.",
-    "Abah Ehi Pauline",
-    "Bamidele Hepzibah O.",
-    "Elijah Peniel O.",
-    "Enoch Sarah",
-    "Femowei Nehemiah O.",
-    "Iheanacho J. Uchenna",
-    "Jude Gift O.",
-    "Noble Mathias",
-    "Ojo J. Moyosoreoluwa",
-    "Ofurum Michele K.",
-    "Sasodje Zoe K.",
-    "Tim-Udzer D. Claribel",
-    "Zira Divine H."
+# List of students in JS1 Gold
+js1G = [
+    "Olorunleke Melody",
+    "Ewe Joana",
+    "Yerima Kayla F.",
+    "Taiwo Boluwatife",
+    "Alexander Mfonabasi Utah",
+    "Jesse Lar Nankpan",
+    "Martins Johnson",
+    "Odebunmi Andrew",
+    "Buhari Bashar Zakaria",
+    "Opakunle Victor",
+    "Ibrahim Yakubu",
+    "Gift Stephen",
+    "David Adibe",
+    "Cherish Monday",
+    "Subah Collins",
+    "Stephen Osinanchi Immaculate",
+    "Jeffrey Solomon",
+    "Chimamanda Richard",
 ]
 
 # Generate individual student data
 students_data = []
-for i, name in enumerate(js1D, start=1):
+for i, name in enumerate(js1G, start=1):
     student = {
         "Name": name.strip(),
-        "Admission No": f"JS1D/{str(i).zfill(3)}",
+        "Admission No": f"JS1G/{str(i).zfill(3)}",
         "Class": "JS 1",
         "Term": "Third Term",
-        "Session": "2024/2025",
+        "Session": "2026/2027",
         "Sex": "Unknown",  # Update if known
-        "Section": "Diamond"
+        "Section": "Gold"
     }
     students_data.append(student)
 
@@ -34,9 +38,9 @@ for i, name in enumerate(js1D, start=1):
 class_data = {
     "Class": "JS 1",
     "Term": "Third Term",
-    "Session": "2024/2025",
-    "Resumption Date": "2024-09-01",
-    "Closing Date": "2025-07-01",
+    "Session": "2026/2027",
+    "Resumption Date": "2026-09-01",
+    "Closing Date": "2027-07-01",
     "Total Students": len(students_data),
     "Average Attendance": 93.0,  # Adjust if needed
     "Coordinator": "Principal"

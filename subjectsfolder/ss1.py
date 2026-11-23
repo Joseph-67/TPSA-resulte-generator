@@ -1,0 +1,17 @@
+ss1_subjects = [
+    "Maths",
+    "English",
+    "Citizenship & Heritage Studies",
+    "Government",
+    "CRS/IRS",
+    "Literature in English",
+    "Hausa",
+    "Biology",
+    "Livestock Farming",
+    "Digital Technology",
+    "Phonics",
+    "Chemistry",
+    "Physics",
+    "Geography",
+    "F/Maths",
+]

@@ -19,7 +19,7 @@ for i, name in enumerate(preNurseryOne, start=1):
         "Admission No": f"PN1/{str(i).zfill(3)}",
         "Class": "Pre-Nursery One",
         "Term": "Third Term",
-        "Session": "2024/2025",
+        "Session": "2026/2027",
         "Sex": "Unknown",  # Placeholder
         "Section": "General"
     }
@@ -29,9 +29,9 @@ for i, name in enumerate(preNurseryOne, start=1):
 class_data = {
     "Class": "Pre-Nursery One",
     "Term": "Third Term",
-    "Session": "2024/2025",
-    "Resumption Date": "2024-09-01",
-    "Closing Date": "2025-07-01",
+    "Session": "2026/2027",
+    "Resumption Date": "2026-09-01",
+    "Closing Date": "2027-07-01",
     "Total Students": len(students_data),
     "Average Attendance": 95.0
 }

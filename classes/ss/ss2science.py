@@ -16,7 +16,7 @@ for i, name in enumerate(ss2science, start=1):
         "Admission No": f"SS2S/{str(i).zfill(3)}",
         "Class": "SS 2 Science",
         "Term": "Third Term",
-        "Session": "2024/2025",
+        "Session": "2026/2027",
         "Sex": "Unknown",  # You can update this if known
         "Section": "Science"
     }
@@ -26,9 +26,9 @@ for i, name in enumerate(ss2science, start=1):
 class_data = {
     "Class": "SS 2 Science",
     "Term": "Third Term",
-    "Session": "2024/2025",
-    "Resumption Date": "2024-09-01",
-    "Closing Date": "2025-07-01",
+    "Session": "2026/2027",
+    "Resumption Date": "2026-09-01",
+    "Closing Date": "2027-07-01",
     "Total Students": len(students_data),
     "Average Attendance": 95.0  # Example placeholder
 }

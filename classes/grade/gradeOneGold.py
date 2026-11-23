@@ -23,7 +23,7 @@ for i, name in enumerate(gradeOneGold, start=1):
         "Admission No": f"G1G/{str(i).zfill(3)}",
         "Class": "Grade One",
         "Term": "Third Term",
-        "Session": "2024/2025",
+        "Session": "2026/2027",
         "Sex": "Unknown",  # Can be updated later
         "Section": "Gold"
     }
@@ -33,9 +33,9 @@ for i, name in enumerate(gradeOneGold, start=1):
 class_data = {
     "Class": "Grade One",
     "Term": "Third Term",
-    "Session": "2024/2025",
-    "Resumption Date": "2024-09-01",
-    "Closing Date": "2025-07-01",
+    "Session": "2026/2027",
+    "Resumption Date": "2026-09-01",
+    "Closing Date": "2027-07-01",
     "Total Students": len(students_data),
     "Average Attendance": 95.0,
     "Coordinator": "Head Teacher"

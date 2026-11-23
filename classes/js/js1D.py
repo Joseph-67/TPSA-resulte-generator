@@ -1,19 +1,23 @@
 # List of students in JS1D
 js1D = [
-    "Abdulmajid S. Nabila",
-    "Adegoke O. Joshua",
-    "Akobeitopa Susan",
-    "Ayodeji E. Precious",
-    "Bassey O. Godwin",
-    "Chukwudi A. Greta",
-    "Ekpe V. Avina",
-    "Enoch M. Sharon",
-    "Gabriel K. Alvin",
-    "Jiriko N. Mathias",
-    "Lukas Purity",
-    "Seth S. Terry",
-    "Simon E. Favour",
-    "Sylvester A. Favour"
+    "Samson Michelle Micheal",
+    "Kappe Jesselyn Jonathan",
+    "Terhember Sedoo Marvis",
+    "Munachi Francis Obasi",
+    "Gabriella Archiving",
+    "Nathaniel Ameh",
+    "Ben Oryiman Savior",
+    "Precious A. Ajibade",
+    "Echekwu Uche Hilda",
+    "Delight Daniel",
+    "Splendor Chkaima",
+    "Alexander Enoabasi Utah",
+    "Happiness Uto",
+    "Joshua Amucheazi",
+    "Emeka Jesse",
+    "Success Amos",
+    "Prudence Enang",
+    "Racheal Tsala Dollars",
 ]
 
 # Generate individual student data
@@ -24,7 +28,7 @@ for i, name in enumerate(js1D, start=1):
         "Admission No": f"JS1D/{str(i).zfill(3)}",
         "Class": "JS 1 ",
         "Term": "Third Term",
-        "Session": "2024/2025",
+        "Session": "2026/2027",
         "Sex": "Unknown",  # Update if known
         "Section": "Diamond"
     }
@@ -34,9 +38,9 @@ for i, name in enumerate(js1D, start=1):
 class_data = {
     "Class": "JS 1",
     "Term": "Third Term",
-    "Session": "2024/2025",
-    "Resumption Date": "2024-09-01",
-    "Closing Date": "2025-07-01",
+    "Session": "2026/2027",
+    "Resumption Date": "2026-09-01",
+    "Closing Date": "2027-07-01",
     "Total Students": len(students_data),
     "Average Attendance": 93.0,  # Adjust if needed
     "Coordinator": "Principal"

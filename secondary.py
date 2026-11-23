@@ -51,7 +51,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     ws.row_dimensions[1].height = 38
 
     ws.merge_cells('A2:M2')
-    ws['A2'] = f"{term_name.upper()} TERM 2025/2026 SESSION ACADEMIC REPORT"
+    ws['A2'] = f"{term_name.upper()} TERM 2026/2027 SESSION ACADEMIC REPORT"
     ws['A2'].font = sub_header_font
     ws['A2'].alignment = center_align
     ws['A2'].fill = gray_fill
@@ -387,7 +387,7 @@ for student in students_data:
 
 # Save
 os.makedirs("final_3term_results", exist_ok=True)
-filename = f"{class_data['Class']}_COMPLETE_3-TERM_RESULTS_2024_2025.xlsx"
+filename = f"{class_data['Class']}_COMPLETE_3-TERM_RESULTS_2026_2027.xlsx"
 path = os.path.join("final_3term_results", filename)
 wb.save(path)
 

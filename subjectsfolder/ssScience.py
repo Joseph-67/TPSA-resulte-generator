@@ -1,15 +1,15 @@
-ss_science_subjects = [
-    "MATHEMATICS",
-    "ENGLISH",
-    "FURTHER MATHEMATICS",
-    "CHEMISTRY",
-    "AGRICULTURAL SCIENCE",
-    "PHYSICS",
-    "GEOGRAPHY",
-    "ECONOMICS",
-    "COMPUTER STUDIES",
-    "PHONICS",
-    "CIVIC EDUCATION",
-    "MARKETING",
-    "BIOLOGY"
+ss2_and_ss3_science_subjects = [
+    "Maths",
+    "English",
+    "Chemistry",
+    "Physics",
+    "Biology",
+    "Citizenship & Heritage Studies",
+    "Livestock Farming",
+    "Geography",
+    "F/Maths",
+    "Digital Technology",
+    "Phonics",
 ]
+
+ss_science_subjects = ss2_and_ss3_science_subjects

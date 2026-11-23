@@ -56,7 +56,7 @@ for student in students_data:
 
     # --- Sub Header Section ---
     ws.merge_cells('A2:M2')
-    ws['A2'] = "SECOND TERM 2024/2025 SESSION ACADEMIC REPORT"
+    ws['A2'] = "SECOND TERM 2026/2027 SESSION ACADEMIC REPORT"
     ws['A2'].font = sub_header_font
     ws['A2'].alignment = center_align
     ws['A2'].fill = section_fill
