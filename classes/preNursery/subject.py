@@ -1,11 +1,9 @@
 subjects = [
-    "MATHEMATICS",
-    "ENGLISH LANGUAGE",
-    "HAND WRITING",
-    "SOCIAL HABIT",
-    "SCIENCE SKILLS",
-    "HEALTH HABIT",
-    "SENSORIAL",
-    "RHYMES",
-    "CURRENT AFFAIRS"
+    "Literacy",
+    "Numeracy",
+    "Handwriting",
+    "Health Habit",
+    "Social Habit",
+    "Science Skill",
+    "Rhymes",
 ]

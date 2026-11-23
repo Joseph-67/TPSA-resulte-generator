@@ -386,9 +386,12 @@ for student in students_data:
     create_term_sheet(ws3, student, "Third", 3, show_prev=True)
 
 # Save
-os.makedirs("final_3term_results", exist_ok=True)
+session_years = class_data["Session"].split("/")
+session_folder = f"{session_years[0]}-{session_years[1][-2:]}"
+output_folder = os.path.join("final_3term_results", session_folder)
+os.makedirs(output_folder, exist_ok=True)
 filename = f"{class_data['Class']}_COMPLETE_3-TERM_RESULTS_2026_2027.xlsx"
-path = os.path.join("final_3term_results", filename)
+path = os.path.join(output_folder, filename)
 wb.save(path)
 
 print("SUCCESS! 3-Term Report Card Generated")

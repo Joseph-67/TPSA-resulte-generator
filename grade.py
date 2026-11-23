@@ -1,17 +1,75 @@
 import os
+import sys
+import math
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.drawing.image import Image
 from openpyxl.chart import BarChart, Reference
+from openpyxl.utils import get_column_letter
 from datetime import datetime
 
 # Your data
-from classes.grade.subject import subjects
-from classes.grade.gradeFour import students_data, class_data
+from classes.student_data_2026_27 import students
+from classes.grade.subject import primary_subjects_all, primary_subjects_without_g4_5
 
-# Create workbook
-wb = Workbook()
-wb.remove(wb.active)
+class_name = sys.argv[1] if __name__ == "__main__" and len(sys.argv) > 1 else "Grade Four"
+if class_name not in students:
+    raise ValueError(
+        f"Unknown class {class_name!r}. Choose one of: {', '.join(students.keys())}"
+    )
+
+if "Diamond" in class_name:
+    section = "Diamond"
+elif "Gold" in class_name:
+    section = "Gold"
+else:
+    section = "General"
+
+base_class_name = class_name.replace(" Gold", "").replace(" Diamond", "")
+grade_numbers = {
+    "Grade One": 1,
+    "Grade Two": 2,
+    "Grade Three": 3,
+    "Grade Four": 4,
+    "Grade Five": 5,
+}
+grade_number = grade_numbers[base_class_name]
+admission_prefix = {
+    "Grade One": "G1",
+    "Grade Two Gold": "G2G",
+    "Grade Two Diamond": "G2D",
+    "Grade Three Diamond": "G3D",
+    "Grade Three Gold": "G3G",
+    "Grade Four": "G4",
+    "Grade Five": "G5",
+}[class_name]
+
+students_data = [
+    {
+        "Name": name,
+        "Admission No": f"{admission_prefix}/{str(index).zfill(3)}",
+        "Class": base_class_name,
+        "Term": "Third Term",
+        "Session": "2026/2027",
+        "Sex": "Unknown",
+        "Section": section,
+    }
+    for index, name in enumerate(students[class_name], start=1)
+]
+
+class_data = {
+    "Class": base_class_name,
+    "Term": "Third Term",
+    "Session": "2026/2027",
+    "Resumption Date": "2026-09-01",
+    "Closing Date": "2027-07-01",
+    "Total Students": len(students_data),
+    "Average Attendance": 95.0,
+    "Coordinator": "Head Teacher",
+    "Section": section,
+}
+
+subjects = primary_subjects_all if grade_number >= 4 else primary_subjects_without_g4_5
 
 # Styles
 header_font = Font(name="Times New Roman", bold=True, size=32)
@@ -26,6 +84,61 @@ section_fill = PatternFill("solid", fgColor="DDDDDD")
 
 # Column widths
 col_widths = {"A": 40.71, "B": 15, "C": 15, "D": 25, "E" : 15, "F": 15, "G": 15, "H": 15, "I": 15, "J": 10, "K" : 10, "L": 20, "M": 5}
+report_config = {
+    "school_name": "TOPSTEPS ACADEMY",
+    "ca1_max": 20,
+    "ca2_max": 20,
+    "ca3_max": 20,
+    "exam_max": 40,
+    "grade_a_min": 75,
+    "grade_b_min": 60,
+    "grade_c_min": 50,
+    "grade_d_min": 45,
+    "grade_e_min": 40,
+}
+assessment_columns = [
+    {"name": "CA1", "max_score": 20},
+    {"name": "CA2", "max_score": 20},
+    {"name": "CA3", "max_score": 20},
+    {"name": "EXAM", "max_score": 40},
+]
+report_fields = {
+    "subject_average": True,
+    "first_term": True,
+    "second_term": True,
+    "cumulative": True,
+    "grade": True,
+    "position": True,
+    "remark": True,
+}
+
+
+def report_columns(term_number):
+    columns = [("subject", "SUBJECT")]
+    component_spacing = " " if term_number == 1 else ""
+    columns.extend(
+        (
+            ("assessment", assessment["name"]),
+            f"{assessment['name'].upper()}{component_spacing}({assessment['max_score']:g}%)",
+        )
+        for assessment in assessment_columns
+    )
+    columns.append(("total", "TOTAL"))
+    if term_number == 1 and report_fields["subject_average"]:
+        columns.append(("subject_average", "SUBJECT AVERAGE"))
+    if term_number >= 2 and report_fields["first_term"]:
+        columns.append(("first_term", "1ST TERM"))
+    if term_number >= 3 and report_fields["second_term"]:
+        columns.append(("second_term", "2ND TERM"))
+    if term_number >= 2 and report_fields["cumulative"]:
+        columns.append(("cumulative", "CUMULATIVE"))
+    if report_fields["grade"]:
+        columns.append(("grade", "GRADE"))
+    if report_fields["position"]:
+        columns.append(("position", "POSITION"))
+    if report_fields["remark"]:
+        columns.append(("remark", "REMARK"))
+    return columns
 
 def safe_sheet_name(base, term):
     name = f"{base[:18]}_{term}"
@@ -44,21 +157,26 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     row = 1
 
     # Header
-    ws.merge_cells('A1:M1')
-    ws['A1'] = "TOPSTEPS ACADEMY"
+    columns = report_columns(term_num)
+    report_width = max(13, len(columns))
+    last_column_letter = get_column_letter(report_width)
+
+    ws.merge_cells(f'A1:{last_column_letter}1')
+    ws['A1'] = report_config["school_name"].upper()
     ws['A1'].font = header_font
     ws['A1'].alignment = center_align
     ws.row_dimensions[1].height = 38
 
-    ws.merge_cells('A2:M2')
-    ws['A2'] = f"{term_name.upper()} TERM 2026/2027 SESSION ACADEMIC REPORT"
+    ws.merge_cells(f'A2:{last_column_letter}2')
+    ws['A2'] = f"{term_name.upper()} TERM {class_data['Session']} SESSION ACADEMIC REPORT"
     ws['A2'].font = sub_header_font
     ws['A2'].alignment = center_align
     ws['A2'].fill = gray_fill
     ws.row_dimensions[2].height = 25
 
-    if os.path.exists("tpsa_logo.png"):
-        logo = Image("tpsa_logo.png")
+    logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tpsa_logo.png")
+    if os.path.exists(logo_path):
+        logo = Image(logo_path)
         logo.width = logo.height = 80
         ws.add_image(logo, "A1")
 
@@ -68,13 +186,13 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
 
     ws.merge_cells('B3:F3')
     ws.merge_cells('G3:H3')
-    ws.merge_cells('I3:M3')
+    ws.merge_cells(f'I3:{last_column_letter}3')
     ws.merge_cells('B4:C4')
     ws.merge_cells('E4:F4')
     ws.merge_cells('G4:H4')
-    ws.merge_cells('I4:M4')
-    ws.merge_cells('B5:M5')
-    ws.merge_cells('A7:M7')
+    ws.merge_cells(f'I4:{last_column_letter}4')
+    ws.merge_cells(f'B5:{last_column_letter}5')
+    ws.merge_cells(f'A7:{last_column_letter}7')
     
 
     ws[f'A{row}'] = "Name:"; ws[f'B{row}'] = student["Name"].upper()
@@ -85,7 +203,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     ws[f'A{row+2}'] = "Resumption:"; ws[f'B{row+2}'] = class_data["Resumption Date"]
 
     for r in range(row, row+3):
-        for c in range(1, 14):
+        for c in range(1, report_width + 1):
             cell = ws.cell(r, c)
             cell.font = title_font
             cell.border = border
@@ -94,7 +212,7 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     row += 4
 
     # Academic Table
-    ws.merge_cells(f'A{row}:M{row}')
+    ws.merge_cells(f'A{row}:{last_column_letter}{row}')
     ws[f'A{row}'] = "ACADEMIC PERFORMANCE"
     ws[f'A{row}'].font = sub_header_font
     ws[f'A{row}'].fill = gray_fill
@@ -104,100 +222,115 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
 
     table_start = row
 
-    # Define columns based on term
-    if term_num == 1:
-        headers = ["SUBJECT", "CA1 (20%)", "CA2 (20%)", "CA3 (20%)", "EXAM(40%)", "TOTAL", "SUBJECT AVERAGE", "GRADE", "POSITION", "REMARK"]
-        cols_total = 6
-        show_1st = False
-        show_2nd = False
-    elif term_num == 2:
-        headers = ["SUBJECT", "CA1(20%)", "CA2(20%)", "CA3(20%)", "EXAM(40%)", "TOTAL", "SUBJECT AVERAGE", "CUMULATIVE", "GRADE", "POSITION", "REMARK"]
-        cols_total = 6
-        show_1st = True
-        show_2nd = False
-    else:  # 3rd Term
-        headers = ["SUBJECT", "CA1(20%)", "CA2(20%)", "CA3(20%)", "EXAM(40%)", "TOTAL", "1ST TERM", "2ND TERM", "CUMULATIVE", "GRADE", "POSITION", "REMARK"]
-        cols_total = 6
-        show_1st = True
-        show_2nd = True
-
-    for i, h in enumerate(headers, 1):
-        cell = ws.cell(row, i, h)
+    column_by_key = {key: index for index, (key, _) in enumerate(columns, 1)}
+    for i, (key, header) in enumerate(columns, 1):
+        cell = ws.cell(row, i, header)
         cell.font = title_font
         cell.alignment = center_align
         cell.fill = gray_fill
         cell.border = border
+        ws.column_dimensions[get_column_letter(i)].width = {
+            "subject": 40.71,
+            "total": 15,
+            "assessment": 15,
+            "subject_average": 15,
+            "first_term": 15,
+            "second_term": 15,
+            "cumulative": 15,
+            "grade": 10,
+            "position": 10,
+            "remark": 20,
+        }.get(key[0] if isinstance(key, tuple) else key, 15)
     ws.row_dimensions[row].height = 30
-    # row += 1
-    # Merge position/remark columns
-    if term_num == 1:
-        print("row J", row)
-        ws.merge_cells(f'J8:M8')
-    elif term_num == 2:
-        print("row S", row)
-        ws.merge_cells(f'k8:M8')
-        print("row T", row)
-    else:
-        ws.merge_cells(f'L8:M8')
-    
+    if "remark" in column_by_key:
+        remark_column = column_by_key["remark"]
+        if remark_column < report_width:
+            ws.merge_cells(
+                start_row=row, start_column=remark_column,
+                end_row=row, end_column=report_width
+            )
 
     # Subject rows
     for idx, subject in enumerate(subjects):
         r = row+1+ idx
-        # Set subject name in column A
-        cell = ws.cell(r, 1)
+        cell = ws.cell(r, column_by_key["subject"])
         cell.value = subject.upper()
         cell.alignment = Alignment(horizontal="left")
         cell.font = title_font
         cell.border = border
-        
-        # CA1 to Exam (will be filled later or left as 0)
-        for c in range(2, 6):
-            ws.cell(r, c, 0)
+        total_col = column_by_key["total"]
+        total_letter = get_column_letter(total_col)
+        assessment_columns_for_row = [
+            column_by_key[("assessment", assessment["name"])]
+            for assessment in assessment_columns
+        ]
+        first_assessment_letter = get_column_letter(min(assessment_columns_for_row))
+        last_assessment_letter = get_column_letter(max(assessment_columns_for_row))
+        ws.cell(r, total_col).value = (
+            f"=ROUND(SUM({first_assessment_letter}{r}:{last_assessment_letter}{r}), 1)"
+        )
 
-        # This Term Total
-        ws.cell(r, cols_total).value = f"=ROUND(B{r} + C{r} + D{r} + E{r}, 1)"
+        if "subject_average" in column_by_key:
+            ws.cell(r, column_by_key["subject_average"]).value = f"={total_letter}{r}"
 
-        col_offset = 7
+        first_term_sheet = safe_sheet_name(
+            student["Name"].upper().replace(" ", "_"), "1ST_TERM"
+        )
+        second_term_sheet = safe_sheet_name(
+            student["Name"].upper().replace(" ", "_"), "2ND_TERM"
+        )
+        quoted_first_sheet = first_term_sheet.replace("'", "''")
+        quoted_second_sheet = second_term_sheet.replace("'", "''")
+        if "first_term" in column_by_key:
+            ws.cell(r, column_by_key["first_term"]).value = (
+                f"='{quoted_first_sheet}'!{total_letter}{r}"
+            )
+        if "second_term" in column_by_key:
+            ws.cell(r, column_by_key["second_term"]).value = (
+                f"='{quoted_second_sheet}'!{total_letter}{r}"
+            )
+        if "cumulative" in column_by_key:
+            cumulative_parts = [f"{total_letter}{r}"]
+            if term_num >= 2:
+                cumulative_parts.append(f"'{quoted_first_sheet}'!{total_letter}{r}")
+            if term_num >= 3:
+                cumulative_parts.append(f"'{quoted_second_sheet}'!{total_letter}{r}")
+            ws.cell(r, column_by_key["cumulative"]).value = (
+                "=" + " + ".join(cumulative_parts)
+            )
 
-        # 1st Term Score (only show on 2nd & 3rd term)
-        if term_num >= 3 and show_1st:
-            sheet_1st = safe_sheet_name(student["Name"].upper().replace(" ", "_"), "1ST_TERM")
-            ws.cell(r, col_offset).value = f"='{sheet_1st}'!F{r}" if term_num >= 2 else ""
-            col_offset += 1
+        grade_expression = (
+            f'IF({total_letter}{r}>={report_config["grade_a_min"]:g},"A",'
+            f'IF({total_letter}{r}>={report_config["grade_b_min"]:g},"B",'
+            f'IF({total_letter}{r}>={report_config["grade_c_min"]:g},"C",'
+            f'IF({total_letter}{r}>={report_config["grade_d_min"]:g},"D",'
+            f'IF({total_letter}{r}>={report_config["grade_e_min"]:g},"E","F")))))'
+        )
+        if "grade" in column_by_key:
+            ws.cell(r, column_by_key["grade"]).value = f"={grade_expression}"
+        if "remark" in column_by_key:
+            grade_reference = (
+                ws.cell(r, column_by_key["grade"]).coordinate
+                if "grade" in column_by_key
+                else grade_expression
+            )
+            remark_column = column_by_key["remark"]
+            ws.cell(r, remark_column).value = (
+                f'=IF({grade_reference}="A","Excellent",'
+                f'IF({grade_reference}="B","Very Good",'
+                f'IF({grade_reference}="C","Good",'
+                f'IF({grade_reference}="D","Fair",'
+                f'IF({grade_reference}="E","Weak","Poor")))))'
+            )
+            if remark_column < report_width:
+                ws.merge_cells(
+                    start_row=r, start_column=remark_column,
+                    end_row=r, end_column=report_width
+                )
+                for c in range(remark_column, report_width + 1):
+                    ws.cell(r, c).border = border
 
-        # 2nd Term Score (only on 3rd term)
-        if term_num == 3 and show_2nd:
-            sheet_2nd = safe_sheet_name(student["Name"].upper().replace(" ", "_"), "2ND_TERM")
-            ws.cell(r, col_offset).value = f"='{sheet_2nd}'!F{r}"
-            col_offset += 1
-
-        # Cumulative Total
-        if term_num == 1:
-            cum_col = col_offset
-            ws.cell(r, cum_col).value = f"=F{r}"
-        elif term_num == 2:
-            cum_col = col_offset
-            ws.cell(r, cum_col).value = f"=F{r} + G{r}"
-        else:
-            cum_col = col_offset
-            ws.cell(r, cum_col).value = f"=F{r} + G{r} + H{r}"
-
-        # Grade (based on this term total)
-        grade_col = cum_col + 1
-        ws.cell(r, grade_col).value = f'=IF(F{r}>=75,"A",IF(F{r}>=60,"B",IF(F{r}>=50,"C",IF(F{r}>=45,"D",IF(F{r}>=40,"E","F")))))'
-
-        # Remark
-        remark_col = grade_col + 2
-        ws.cell(r, remark_col).value = f'=IF({ws.cell(r, grade_col).coordinate}="A","Excellent",IF({ws.cell(r, grade_col).coordinate}="B","Very Good",IF({ws.cell(r, grade_col).coordinate}="C","Good",IF({ws.cell(r, grade_col).coordinate}="D","Fair",IF({ws.cell(r, grade_col).coordinate}="E","Weak","Poor")))))'
-        
-        # Merge remark cell to column M
-        ws.merge_cells(f'{ws.cell(r, remark_col).coordinate}:M{r}')
-        for c in range(remark_col, 14):
-            ws.cell(r, c).border = border
-
-        # Apply styling
-        for c in range(1, len(headers) + 1):
+        for c in range(1, len(columns) + 1):
             cell = ws.cell(r, c)
             cell.alignment = center_align
             cell.border = border
@@ -212,19 +345,30 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     ws[f'A{row}'].fill = gray_fill
     ws[f'A{row}'].alignment = Alignment(horizontal="center")
 
-    total_obtainable = len(subjects) * 100
+    total_obtainable = len(subjects) * sum(
+        assessment["max_score"] for assessment in assessment_columns
+    )
     total_row = row + 1
     ws[f'A{total_row}'] = "Total Score Obtainable"
     ws[f'B{total_row}'] = total_obtainable
 
     ws[f'A{total_row+1}'] = "Total Score Obtained"
-    ws[f'B{total_row+1}'] = f"=SUM(F{table_start+1}:F{row-2})"
+    total_column_letter = get_column_letter(column_by_key["total"])
+    ws[f'B{total_row+1}'] = (
+        f"=SUM({total_column_letter}{table_start+1}:{total_column_letter}{row-2})"
+    )
 
     ws[f'A{total_row+2}'] = "Average"
-    ws[f'B{total_row+2}'] = f"=ROUND(AVERAGE(F{table_start+1}:F{row-2}),1)"
+    ws[f'B{total_row+2}'] = (
+        f"=ROUND(AVERAGE({total_column_letter}{table_start+1}:"
+        f"{total_column_letter}{row-2}),1)"
+    )
 
     ws[f'A{total_row+3}'] = "Overall Grade"
-    ws[f'B{total_row+3}'] = f'=IF(B{total_row+2}>=75,"A",IF(B{total_row+2}>=60,"B",IF(B{total_row+2}>=50,"C",IF(B{total_row+2}>=45,"D",IF(B{total_row+2}>=40,"E","F")))))'
+    if report_fields["grade"]:
+        ws[f'B{total_row+3}'] = f'=IF(B{total_row+2}>={report_config["grade_a_min"]:g},"A",IF(B{total_row+2}>={report_config["grade_b_min"]:g},"B",IF(B{total_row+2}>={report_config["grade_c_min"]:g},"C",IF(B{total_row+2}>={report_config["grade_d_min"]:g},"D",IF(B{total_row+2}>={report_config["grade_e_min"]:g},"E","F")))))'
+    else:
+        ws[f'A{total_row+3}'] = ""
 
     # ws[f'A{total_row+4}'] = "Position in Class"
     # ws[f'B{total_row+4}'] = "________"
@@ -251,16 +395,16 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     chart.x_axis.delete = False
     chart.y_axis.delete = False
 
-    # Adjust data column based on term (use cumulative total)
-    if term_num == 1:
-        data_col = 6  # Column E (This Term Total)
-    elif term_num == 2:
-        data_col = 6  # Column F (Cumulative for 2nd term)
-    else:  # term_num == 3
-        data_col = 6  # Column G (Cumulative for 3rd term)
+    data_col = column_by_key["total"]
 
-    data = Reference(ws, min_col=data_col, min_row=table_start, max_row=table_start + len(subjects) - 1)
-    cats = Reference(ws, min_col=1, min_row=table_start + 1, max_row=table_start + len(subjects))
+    data = Reference(
+        ws, min_col=data_col, min_row=table_start,
+        max_row=table_start + len(subjects)
+    )
+    cats = Reference(
+        ws, min_col=column_by_key["subject"],
+        min_row=table_start + 1, max_row=table_start + len(subjects)
+    )
     chart.add_data(data, titles_from_data=True)
     chart.set_categories(cats)
     chart.x_axis.textRotation = 45
@@ -334,31 +478,37 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
         ws[f"B{remark_row+i}"].value = "To be filled".upper()
         ws[f"C{remark_row+i}"].border = border
 
-        ws.merge_cells(start_row=remark_row + i, start_column=1, end_row=remark_row + i, end_column=13)
+        ws.merge_cells(
+            start_row=remark_row + i, start_column=1,
+            end_row=remark_row + i, end_column=report_width
+        )
 
     # --- 9. Grading Scale ---
-    grade_row = summary_row
-    ws[f"K{grade_row}"] = "Grading Scale (Legend)".upper()
-    ws[f"K{grade_row}"].font = title_font
-    ws[f"K{grade_row}"].fill = section_fill
-    ws[f"K{grade_row}"].alignment = center_align
-    ws[f"K{grade_row}"].border = border
-    ws.row_dimensions[grade_row].height = 25
-    # ws.merge_cells("K{grade_row}:L{grade_row}")
-    ws.merge_cells(f"K{grade_row}:L{grade_row}")
-    grades = {
-        "A": "75 - 100 (Excellent)",
-        "B": "60 - 74 (Very Good)",
-        "C": "50 - 59 (Good)",
-        "D": "45 - 49 (Fair)",
-        "E": "40 - 44 (Weak)",
-        "F": "0 - 39 (Poor)"
-    }
-    for i, (grade, meaning) in enumerate(grades.items()):
-        ws[f"K{grade_row+1+i}"] = grade
-        ws[f"L{grade_row+1+i}"] = meaning.upper()
-        ws[f"K{grade_row+1+i}"].border = border
-        ws[f"L{grade_row+1+i}"].border = border
+    if report_fields["grade"]:
+        grade_row = summary_row
+        legend_column = max(11, report_width - 2)
+        legend_letter = get_column_letter(legend_column)
+        meaning_letter = get_column_letter(legend_column + 1)
+        ws[f"{legend_letter}{grade_row}"] = "Grading Scale (Legend)".upper()
+        ws[f"{legend_letter}{grade_row}"].font = title_font
+        ws[f"{legend_letter}{grade_row}"].fill = section_fill
+        ws[f"{legend_letter}{grade_row}"].alignment = center_align
+        ws[f"{legend_letter}{grade_row}"].border = border
+        ws.row_dimensions[grade_row].height = 25
+        ws.merge_cells(f"{legend_letter}{grade_row}:{meaning_letter}{grade_row}")
+        grades = {
+            "A": f"{report_config['grade_a_min']:g} - 100 (Excellent)",
+            "B": f"{report_config['grade_b_min']:g} - {report_config['grade_a_min'] - 1:g} (Very Good)",
+            "C": f"{report_config['grade_c_min']:g} - {report_config['grade_b_min'] - 1:g} (Good)",
+            "D": f"{report_config['grade_d_min']:g} - {report_config['grade_c_min'] - 1:g} (Fair)",
+            "E": f"{report_config['grade_e_min']:g} - {report_config['grade_d_min'] - 1:g} (Weak)",
+            "F": f"0 - {report_config['grade_e_min'] - 1:g} (Poor)"
+        }
+        for i, (grade, meaning) in enumerate(grades.items()):
+            ws[f"{legend_letter}{grade_row+1+i}"] = grade
+            ws[f"{meaning_letter}{grade_row+1+i}"] = meaning.upper()
+            ws[f"{legend_letter}{grade_row+1+i}"].border = border
+            ws[f"{meaning_letter}{grade_row+1+i}"].border = border
 
     # --- Page Setup for Printing ---
     ws.page_setup.orientation = ws.ORIENTATION_PORTRAIT
@@ -374,31 +524,150 @@ def create_term_sheet(ws, student, term_name, term_num, show_prev=True):
     ws.page_margins.header = 0.2
     ws.page_margins.footer = 0.2
 
-# === CREATE SHEETS FOR EACH STUDENT ===
-for student in students_data:
-    base = student["Name"].upper().replace(" ", "_")
+def generate_grade_workbook(
+    selected_students,
+    selected_class_data,
+    selected_subjects,
+    score_data=None,
+    selected_report_config=None,
+    output_path=None,
+    selected_assessments=None,
+    selected_report_fields=None,
+):
+    global wb, students_data, class_data, subjects, report_config
+    global assessment_columns, report_fields
+    students_data = selected_students
+    class_data = selected_class_data
+    subjects = selected_subjects
+    report_config = {
+        "school_name": "TOPSTEPS ACADEMY",
+        "ca1_max": 20,
+        "ca2_max": 20,
+        "ca3_max": 20,
+        "exam_max": 40,
+        "grade_a_min": 75,
+        "grade_b_min": 60,
+        "grade_c_min": 50,
+        "grade_d_min": 45,
+        "grade_e_min": 40,
+        **(selected_report_config or {}),
+    }
+    assessment_columns = (
+        selected_assessments
+        if selected_assessments is not None
+        else [
+            {"name": "CA1", "max_score": 20},
+            {"name": "CA2", "max_score": 20},
+            {"name": "CA3", "max_score": 20},
+            {"name": "EXAM", "max_score": 40},
+        ]
+    )
+    report_fields = {
+        "subject_average": True,
+        "first_term": True,
+        "second_term": True,
+        "cumulative": True,
+        "grade": True,
+        "position": True,
+        "remark": True,
+        **(selected_report_fields or {}),
+    }
+    if not assessment_columns:
+        raise ValueError("Configure at least one active scored column.")
+    normalized_assessments = []
+    for column in assessment_columns:
+        name = str(column["name"]).strip()
+        maximum = float(column["max_score"])
+        if not name or not math.isfinite(maximum) or maximum <= 0:
+            raise ValueError("Every active scored column needs a name and a positive maximum mark.")
+        normalized_assessments.append({"name": name, "max_score": maximum})
+    if len({column["name"].casefold() for column in normalized_assessments}) != len(normalized_assessments):
+        raise ValueError("Active scored column names must be unique.")
+    if abs(sum(column["max_score"] for column in normalized_assessments) - 100) > 0.000001:
+        raise ValueError("Active scored column maximums must total 100.")
+    assessment_columns = normalized_assessments
+    score_data = score_data or {}
+    wb = Workbook()
+    wb.remove(wb.active)
+    sheet_names = {}
 
-    # 1st Term
-    ws1 = wb.create_sheet(safe_sheet_name(base, "1ST_TERM"))
-    create_term_sheet(ws1, student, "First", 1, show_prev=False)
+    term_details = (("1ST_TERM", "First", 1, False), ("2ND_TERM", "Second", 2, True), ("3RD_TERM", "Third", 3, True))
+    for student in students_data:
+        base = student["Name"].upper().replace(" ", "_")
+        for suffix, term_name, term_number, show_previous in term_details:
+            sheet_name = safe_sheet_name(base, suffix)
+            ws = wb.create_sheet(sheet_name)
+            sheet_names[(student["Admission No"], term_number)] = sheet_name
+            create_term_sheet(ws, student, term_name, term_number, show_prev=show_previous)
+            column_by_key = {
+                key: index for index, (key, _) in enumerate(report_columns(term_number), 1)
+            }
+            for subject_index, subject in enumerate(subjects):
+                result = score_data.get(
+                    (student["Admission No"], subject, term_number), {}
+                )
+                score_row = 9 + subject_index
+                for assessment in assessment_columns:
+                    column = column_by_key[("assessment", assessment["name"])]
+                    ws.cell(score_row, column).value = result.get(
+                        assessment["name"], 0
+                    )
 
-    # 2nd Term
-    ws2 = wb.create_sheet(safe_sheet_name(base, "2ND_TERM"))
-    create_term_sheet(ws2, student, "Second", 2, show_prev=True)
+    for term_number in (1, 2, 3):
+        column_by_key = {
+            key: index for index, (key, _) in enumerate(report_columns(term_number), 1)
+        }
+        position_column = column_by_key.get("position")
+        if position_column is None:
+            continue
+        total_letter = get_column_letter(column_by_key["total"])
+        for subject_index, subject in enumerate(subjects):
+            score_row = 9 + subject_index
+            for student in students_data:
+                ws = wb[sheet_names[(student["Admission No"], term_number)]]
+                position_terms = []
+                for other_student in students_data:
+                    other_sheet = sheet_names[
+                        (other_student["Admission No"], term_number)
+                    ].replace("'", "''")
+                    position_terms.append(
+                        f'COUNTIF(\'{other_sheet}\'!{total_letter}{score_row},'
+                        f'">"&{total_letter}{score_row})'
+                    )
+                ws.cell(score_row, position_column).value = (
+                    "=1+" + "+".join(position_terms)
+                )
 
-    # 3rd Term (full cumulative)
-    ws3 = wb.create_sheet(safe_sheet_name(base, "3RD_TERM"))
-    create_term_sheet(ws3, student, "Third", 3, show_prev=True)
+    wb.calculation.fullCalcOnLoad = True
+    wb.calculation.forceFullCalc = True
+    wb.calculation.calcMode = "auto"
+    if output_path is None:
+        session_years = class_data["Session"].split("/")
+        session_folder = f"{session_years[0]}-{session_years[1][-2:]}"
+        output_folder = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "final_3term_results",
+            session_folder,
+        )
+        os.makedirs(output_folder, exist_ok=True)
+        section = class_data.get("Section", "General")
+        class_label = class_data["Class"]
+        if section not in ("", "General"):
+            class_label = f"{class_label}_{section}"
+        filename = f"{class_label}_COMPLETE_3-TERM_RESULTS_{class_data['Session'].replace('/', '_')}.xlsx"
+        output_path = os.path.join(output_folder, filename)
+    else:
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
 
-# Save
-os.makedirs("final_3term_results", exist_ok=True)
-filename = f"{class_data['Class']}_COMPLETE_3-TERM_RESULTS_2026_2027.xlsx"
-path = os.path.join("final_3term_results", filename)
-wb.save(path)
+    wb.save(output_path)
+    return output_path
 
-print("SUCCESS! 3-Term Report Card Generated")
-print(f"File: {path}")
-print(f"Students: {len(students_data)} × 3 sheets = {len(students_data)*3} total sheets")
-print("1st Term → Only current term")
-print("2nd Term → Current + 1st Term")
-print("3rd Term → All 3 terms + Cumulative")
+
+if __name__ == "__main__":
+    path = generate_grade_workbook(students_data, class_data, subjects)
+    print("SUCCESS! 3-Term Report Card Generated")
+    print(f"File: {path}")
+    print(f"Students: {len(students_data)} x 3 sheets = {len(students_data)*3} total sheets")
+    print("1st Term -> Only current term")
+    print("2nd Term -> Current + 1st Term")
+    print("3rd Term -> All 3 terms + Cumulative")
