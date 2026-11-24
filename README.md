@@ -31,6 +31,8 @@ password immediately from **Manage Admins**.
   average, prior-term scores, cumulative score, grade, position, and remark).
 - Configure A–F minimum-grade thresholds.
 - Add classes and class-specific subjects; deactivate subjects no longer used.
+- Load the configured JS and SS student cohorts and subjects into the desktop
+  database during initialization, including existing databases with students.
 - Enter and save scores separately for each of the three terms.
 - Generate an Excel workbook containing first-, second-, and third-term sheets
   for every active student in the selected class and configured session.

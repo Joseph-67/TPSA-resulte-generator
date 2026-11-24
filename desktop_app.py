@@ -1,21 +1,72 @@
 import csv
+import importlib
+import io
 import math
 import os
 import sqlite3
 import sys
 from datetime import datetime
-from contextlib import contextmanager
+from contextlib import contextmanager, redirect_stdout
 
 import customtkinter as ctk
 from openpyxl import load_workbook
 from tkinter import BooleanVar, filedialog, messagebox
 from werkzeug.security import check_password_hash, generate_password_hash
 from grade import generate_grade_workbook
+from classes.js.subject import js1_subjects, js2_and_js3_subjects
+from classes.ss.subject import (
+    ss1_subjects,
+    ss2_and_ss3_art_subjects,
+    ss2_and_ss3_science_subjects,
+)
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE = os.environ.get("TPSA_DATABASE", os.path.join(BASE_DIR, "tpsa.db"))
 OUTPUT_DIR = os.path.join(BASE_DIR, "final_3term_results")
+SECONDARY_STUDENT_MODULES = (
+    "classes.js.js1D",
+    "classes.js.js1G",
+    "classes.js.js2D",
+    "classes.js.js2G",
+    "classes.js.js3",
+    "classes.ss.SS1D",
+    "classes.ss.ss1",
+    "classes.ss.ss1art",
+    "classes.ss.ss1science",
+    "classes.ss.ss2art",
+    "classes.ss.ss2d",
+    "classes.ss.ss2g",
+    "classes.ss.ss2science",
+    "classes.ss.ss3",
+)
+
+
+def load_secondary_students():
+    students = []
+    with redirect_stdout(io.StringIO()):
+        for module_name in SECONDARY_STUDENT_MODULES:
+            module = importlib.import_module(module_name)
+            students.extend(module.students_data)
+    return students
+
+
+def secondary_subjects_for(class_name):
+    if class_name.startswith("JS 1"):
+        return js1_subjects
+    if class_name.startswith(("JS 2", "JS 3")):
+        return js2_and_js3_subjects
+    if class_name.startswith("SS 1"):
+        return ss1_subjects
+    if class_name.endswith("Art"):
+        return ss2_and_ss3_art_subjects
+    if class_name.endswith("Science"):
+        return ss2_and_ss3_science_subjects
+    if class_name.startswith(("SS 2", "SS 3")):
+        return list(dict.fromkeys(
+            ss2_and_ss3_art_subjects + ss2_and_ss3_science_subjects
+        ))
+    raise ValueError(f"No secondary subjects are configured for {class_name}.")
 
 
 @contextmanager
@@ -142,7 +193,8 @@ def init_db():
 
         classes = [
             ("Pre-Nursery Ode", "General"),
-            ("Grade One", "General"),
+            ("Grade One Diamond", "Diamond"),
+            ("Grade One Gold", "Gold"),
             ("Grade Two Gold", "Gold"),
             ("Grade Two Diamond", "Diamond"),
             ("Grade Three Diamond", "Diamond"),
@@ -150,6 +202,18 @@ def init_db():
             ("Grade Four", "General"),
             ("Grade Five", "General"),
         ]
+        legacy_grade_one = db.execute(
+            "SELECT id FROM classes WHERE name='Grade One'"
+        ).fetchone()
+        grade_one_diamond = db.execute(
+            "SELECT id FROM classes WHERE name='Grade One Diamond'"
+        ).fetchone()
+        if legacy_grade_one and not grade_one_diamond:
+            db.execute(
+                "UPDATE classes SET name='Grade One Diamond', section='Diamond' "
+                "WHERE id=?",
+                (legacy_grade_one["id"],),
+            )
         for name, section in classes:
             db.execute("INSERT OR IGNORE INTO classes(name, section) VALUES (?, ?)", (name, section))
 
@@ -203,7 +267,10 @@ def init_db():
             "SELECT value FROM config WHERE key='nursery_subjects_migrated'"
         ).fetchone()
         migrate_nursery_subjects = not nursery_subjects_migrated
+        primary_class_names = {name for name, _ in classes}
         for row in db.execute("SELECT id, name FROM classes").fetchall():
+            if row["name"] not in primary_class_names:
+                continue
             if row["name"].startswith("Pre-Nursery"):
                 names = nursery_subjects
                 if migrate_nursery_subjects:
@@ -229,33 +296,80 @@ def init_db():
                 "INSERT INTO config(key, value) VALUES ('nursery_subjects_migrated', '1')"
             )
 
-        if db.execute("SELECT COUNT(*) FROM students").fetchone()[0] == 0:
-            try:
-                from classes.student_data_2026_27 import students as initial_students
-            except ImportError:
-                initial_students = {}
-            for class_name, names in initial_students.items():
-                class_row = db.execute(
-                    "SELECT id FROM classes WHERE name=?", (class_name,)
-                ).fetchone()
-                if not class_row:
-                    continue
-                admission_prefix = {
-                    "Pre-Nursery Ode": "PN",
-                    "Grade One": "G1",
-                    "Grade Two Gold": "G2G",
-                    "Grade Two Diamond": "G2D",
-                    "Grade Three Diamond": "G3D",
-                    "Grade Three Gold": "G3G",
-                    "Grade Four": "G4",
-                    "Grade Five": "G5",
-                }.get(class_name, "STU")
-                for index, name in enumerate(names, 1):
-                    db.execute(
-                        "INSERT OR IGNORE INTO students(name, admission_no, class_id, session) "
-                        "VALUES (?, ?, ?, ?)",
-                        (name, f"{admission_prefix}/{index:03d}", class_row["id"], "2026/2027")
-                    )
+        secondary_classes = {}
+        for student in load_secondary_students():
+            class_name = student["Class"].strip()
+            section = student.get("Section", "").strip()
+            if section and not class_name.casefold().endswith(section.casefold()):
+                class_name = f"{class_name} {section}"
+            class_data = secondary_classes.setdefault(
+                class_name,
+                {"section": section or "General", "students": []},
+            )
+            class_data["students"].append(student)
+
+        for class_name, class_data in secondary_classes.items():
+            db.execute(
+                "INSERT OR IGNORE INTO classes(name, section) VALUES (?, ?)",
+                (class_name, class_data["section"]),
+            )
+            class_id = db.execute(
+                "SELECT id FROM classes WHERE name=?", (class_name,)
+            ).fetchone()["id"]
+            for subject_name in secondary_subjects_for(class_name):
+                db.execute(
+                    "INSERT OR IGNORE INTO subjects(name, class_id) VALUES (?, ?)",
+                    (subject_name, class_id),
+                )
+            for sort_order, (assessment_name, maximum) in enumerate(
+                assessment_defaults, 1
+            ):
+                db.execute(
+                    "INSERT OR IGNORE INTO assessment_columns"
+                    "(class_id, name, max_score, sort_order) VALUES (?, ?, ?, ?)",
+                    (class_id, assessment_name, maximum, sort_order),
+                )
+            for student in class_data["students"]:
+                db.execute(
+                    "INSERT OR IGNORE INTO students"
+                    "(name, admission_no, class_id, sex, session) "
+                    "VALUES (?, ?, ?, ?, ?)",
+                    (
+                        student["Name"],
+                        student["Admission No"],
+                        class_id,
+                        student.get("Sex", "Unknown"),
+                        student.get("Session", "2026/2027"),
+                    ),
+                )
+
+        try:
+            from classes.student_data_2026_27 import students as initial_students
+        except ImportError:
+            initial_students = {}
+        for class_name, names in initial_students.items():
+            class_row = db.execute(
+                "SELECT id FROM classes WHERE name=?", (class_name,)
+            ).fetchone()
+            if not class_row:
+                continue
+            admission_prefix = {
+                "Pre-Nursery Ode": "PN",
+                "Grade One Diamond": "G1",
+                "Grade One Gold": "G1G",
+                "Grade Two Gold": "G2G",
+                "Grade Two Diamond": "G2D",
+                "Grade Three Diamond": "G3D",
+                "Grade Three Gold": "G3G",
+                "Grade Four": "G4",
+                "Grade Five": "G5",
+            }.get(class_name, "STU")
+            for index, name in enumerate(names, 1):
+                db.execute(
+                    "INSERT OR IGNORE INTO students(name, admission_no, class_id, session) "
+                    "VALUES (?, ?, ?, ?)",
+                    (name, f"{admission_prefix}/{index:03d}", class_row["id"], "2026/2027")
+                )
 
 
 class LoginFrame(ctk.CTkFrame):

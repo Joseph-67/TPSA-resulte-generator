@@ -17,7 +17,7 @@ SS1D = [
 
 # Generate individual student data
 students_data = []
-for i, name in enumerate(ss1D, start=1):
+for i, name in enumerate(SS1D, start=1):
     student = {
         "Name": name.strip(),
         "Admission No": f"SS1D/{str(i).zfill(3)}",

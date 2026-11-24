@@ -35,7 +35,8 @@ grade_numbers = {
 }
 grade_number = grade_numbers[base_class_name]
 admission_prefix = {
-    "Grade One": "G1",
+    "Grade One Diamond": "G1",
+    "Grade One Gold": "G1G",
     "Grade Two Gold": "G2G",
     "Grade Two Diamond": "G2D",
     "Grade Three Diamond": "G3D",
