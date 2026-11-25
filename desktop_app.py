@@ -192,7 +192,7 @@ def init_db():
             db.execute("ALTER TABLE admins ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1")
 
         classes = [
-            ("Pre-Nursery Ode", "General"),
+            ("Pre-Nursery One", "General"),
             ("Grade One Diamond", "Diamond"),
             ("Grade One Gold", "Gold"),
             ("Grade Two Gold", "Gold"),
@@ -202,6 +202,17 @@ def init_db():
             ("Grade Four", "General"),
             ("Grade Five", "General"),
         ]
+        legacy_pre_nursery = db.execute(
+            "SELECT id FROM classes WHERE name='Pre-Nursery Ode'"
+        ).fetchone()
+        pre_nursery_one = db.execute(
+            "SELECT id FROM classes WHERE name='Pre-Nursery One'"
+        ).fetchone()
+        if legacy_pre_nursery and not pre_nursery_one:
+            db.execute(
+                "UPDATE classes SET name='Pre-Nursery One' WHERE id=?",
+                (legacy_pre_nursery["id"],),
+            )
         legacy_grade_one = db.execute(
             "SELECT id FROM classes WHERE name='Grade One'"
         ).fetchone()
@@ -260,6 +271,10 @@ def init_db():
             "Social Habit", "Civic Education", "Personal Development",
             "Handwriting", "Creativity", "Rhymes", "CRS",
         ]
+        pre_nursery_subjects = [
+            "Literacy", "Numeracy", "Handwriting", "Health Habit",
+            "Social Habit", "Science Skill", "Rhymes",
+        ]
         lower_primary = [name for name in primary if name not in (
             "Pre-Vocational Studies", "Basic Digital Literacy"
         )]
@@ -268,11 +283,29 @@ def init_db():
         ).fetchone()
         migrate_nursery_subjects = not nursery_subjects_migrated
         primary_class_names = {name for name, _ in classes}
+        pre_nursery_subjects_migrated = db.execute(
+            "SELECT value FROM config WHERE key='pre_nursery_one_subjects_migrated'"
+        ).fetchone()
+        if not pre_nursery_subjects_migrated:
+            pre_nursery_class = db.execute(
+                "SELECT id FROM classes WHERE name='Pre-Nursery One'"
+            ).fetchone()
+            if pre_nursery_class:
+                for subject_name in nursery_subjects:
+                    if subject_name not in pre_nursery_subjects:
+                        db.execute(
+                            "UPDATE subjects SET active=0 WHERE class_id=? AND name=?",
+                            (pre_nursery_class["id"], subject_name),
+                        )
+            db.execute(
+                "INSERT INTO config(key, value) "
+                "VALUES ('pre_nursery_one_subjects_migrated', '1')"
+            )
         for row in db.execute("SELECT id, name FROM classes").fetchall():
             if row["name"] not in primary_class_names:
                 continue
-            if row["name"].startswith("Pre-Nursery"):
-                names = nursery_subjects
+            if row["name"] == "Pre-Nursery One":
+                names = pre_nursery_subjects
                 if migrate_nursery_subjects:
                     for subject_name in primary:
                         db.execute(
@@ -286,7 +319,7 @@ def init_db():
                     "INSERT OR IGNORE INTO subjects(name, class_id) VALUES (?, ?)",
                     (subject_name, row["id"])
                 )
-                if row["name"].startswith("Pre-Nursery") and migrate_nursery_subjects:
+                if row["name"] == "Pre-Nursery One" and migrate_nursery_subjects:
                     db.execute(
                         "UPDATE subjects SET active=1 WHERE class_id=? AND name=?",
                         (row["id"], subject_name)
@@ -354,7 +387,7 @@ def init_db():
             if not class_row:
                 continue
             admission_prefix = {
-                "Pre-Nursery Ode": "PN",
+                "Pre-Nursery One": "PN",
                 "Grade One Diamond": "G1",
                 "Grade One Gold": "G1G",
                 "Grade Two Gold": "G2G",

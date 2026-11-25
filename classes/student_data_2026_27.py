@@ -1,5 +1,5 @@
 students = {
-    "Pre-Nursery Ode": [
+    "Pre-Nursery One": [
         "Adeone Phoebe Adejumoke",
         "Josiah Anadoo",
         "Kanu Elora Chizaram",

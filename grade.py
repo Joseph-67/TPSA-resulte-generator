@@ -11,6 +11,7 @@ from datetime import datetime
 # Your data
 from classes.student_data_2026_27 import students
 from classes.grade.subject import primary_subjects_all, primary_subjects_without_g4_5
+from classes.preNursery.subject import subjects as pre_nursery_subjects
 
 class_name = sys.argv[1] if __name__ == "__main__" and len(sys.argv) > 1 else "Grade Four"
 if class_name not in students:
@@ -27,6 +28,7 @@ else:
 
 base_class_name = class_name.replace(" Gold", "").replace(" Diamond", "")
 grade_numbers = {
+    "Pre-Nursery One": 0,
     "Grade One": 1,
     "Grade Two": 2,
     "Grade Three": 3,
@@ -35,6 +37,7 @@ grade_numbers = {
 }
 grade_number = grade_numbers[base_class_name]
 admission_prefix = {
+    "Pre-Nursery One": "PN",
     "Grade One Diamond": "G1",
     "Grade One Gold": "G1G",
     "Grade Two Gold": "G2G",
@@ -70,7 +73,10 @@ class_data = {
     "Section": section,
 }
 
-subjects = primary_subjects_all if grade_number >= 4 else primary_subjects_without_g4_5
+if grade_number == 0:
+    subjects = pre_nursery_subjects
+else:
+    subjects = primary_subjects_all if grade_number >= 4 else primary_subjects_without_g4_5
 
 # Styles
 header_font = Font(name="Times New Roman", bold=True, size=32)
