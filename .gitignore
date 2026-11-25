@@ -1,0 +1,9 @@
+# Generated software packages
+dist/
+build/
+*.exe
+*.zip
+
+# Python caches
+__pycache__/
+*.py[cod]

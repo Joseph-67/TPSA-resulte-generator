@@ -1,22 +1,22 @@
 # List of student names for Nursery One Gold
 nurseryOneGold = [
-    "Abayomi Abdulrasaq Abayomi",
-    "Atom Ivan",
-    "Ajibola  Khalid Oche",
-    "Anyadike Chukwuebuka Elliot",
-    "Bukar Jamila",
-    "David Joan",
-    "Emmanuel Peace Eleojo",
-    "Emmanuel Joy Enyojo",
-    "Isaac Henrybright Ojochegbe",
-    "Mustapha Ahmad Lawal",
-    "Nnameka Kambili Chiam",
-    "Okafor Amazing",
-    "Owulo Olieje Henrick",
-    "Oladipopu Anita Adeola",
-    "Promise Favour Ojochegbe",
-    "Igoche Joan",
-    "Anthony E. Kamsiyochukwu"
+    "Josiah Lushan Star",
+    "Moses Isabella Eboh",
+    "Nwamaka Chisom Kimberly",
+    "Okon Deborah",
+    "Okaka Charles Chiemerie",
+    "Ogunrombi Eliora",
+    "Oluwaseyi Florish Mokuneayo",
+    "Terseer Beatrice Mesuur",
+    "Tongark Ritmwa Sekani",
+    "Muhammed Khalid Zakari",
+    "Elele Star Souton",
+    "Elele Soar Souyo",
+    "Oluwatobiloba Evans Okungboye",
+    "Samuel Cassiel",
+    "Ikechukwu Abraham",
+    "Ugwu Osinachi Kendrick",
+    "Tana Zephan Ogbohifo",
 ]
 
 # Generate student data for Nursery One Gold
@@ -29,7 +29,7 @@ for i, name in enumerate(nurseryOneGold, start=1):
         "Term": "Third Term",
         "Session": "2026/2027",
         "Sex": "Unknown",  # Placeholder for gender
-        "Section": "General"
+        "Section": "Gold"
     }
     students_data.append(student)
 

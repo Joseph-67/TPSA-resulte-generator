@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12304a">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <title>TPSA Result Manager</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#17202a;background:#f2f5f7}
+    *{box-sizing:border-box} body{margin:0} a{text-decoration:none;color:inherit}
+    header{background:#12304a;color:white;padding:.8rem 1rem;display:flex;align-items:center;justify-content:space-between}
+    nav{display:flex;gap:.5rem}.shell{max-width:1100px;margin:auto}
+    nav a{padding:.55rem .75rem;border-radius:.45rem} nav a:hover{background:#1f6694}
+    main{padding:1rem}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.8rem}
+    .card{background:white;border-radius:.75rem;padding:1rem;box-shadow:0 2px 10px #0001}
+    .card strong{display:block;font-size:1.8rem}.toolbar,.form-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:end;margin:.7rem 0}
+    input,select,button{font:inherit;padding:.65rem;border:1px solid #bcc7d1;border-radius:.45rem}
+    button,.button{background:#1f6694;color:white;border:0;cursor:pointer}
+    table{width:100%;border-collapse:collapse;background:white} th,td{border:1px solid #dfe6ec;padding:.5rem;text-align:left}
+    .table-wrap{overflow:auto}td input{width:70px}.messages{margin:.5rem 0}.message{padding:.7rem;border-radius:.45rem;background:#d9f1df}
+    .message.error{background:#f8d7da}.login-page{min-height:100vh;display:grid;place-items:center}
+    .login-card{width:min(390px,calc(100% - 2rem)} @media(max-width:700px){nav{overflow:auto}.desktop-nav{display:none}.cards{grid-template-columns:1fr 1fr}main{padding:.6rem}}
+  </style>
+</head>
+<body>
+{% if session.admin_id %}
+<header>
+  <strong>TPSA ADMIN</strong>
+  <nav>
+    <a href="/">Dashboard</a><a href="/students">Students</a><a href="/results">Results</a>
+    <a href="/logout">Sign Out</a>
+  </nav>
+</header>
+{% endif %}
+<main>
+  <div class="shell">
+    {% for message in messages %}<div class="messages"><div class="message {{ message.category }}">{{ message.text }}</div></div>{% endfor %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+<script>
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");
+</script>
+</body>
+</html>

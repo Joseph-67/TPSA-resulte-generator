@@ -1,14 +1,19 @@
 # List of student names for Nursery One Diamond
 nurseryOneDiamond = [
-    "Abdulrasaq Afsheen Enehezeyi",
-    "Goodfriday Ayibatari-Emitimipah",
-    "Aiya Derick Ehizokhar",
-    "Solomon James Magodeshekwoyi",
-    "Ameh Ejebabi John",
-    "Muhammed Ahmed Lukman",
-    "Lucky Mishael Ovie",
-    "Ubah Michael",
-    "Peniel Enang"
+    "Ayibaebi Dorathy Ayobatunimi",
+    "Dimka Yahaya Rhowogi",
+    "Geoffery Dora Ashedzi",
+    "Godwin Kayla Enyojo",
+    "Haggai Henry Haruna",
+    "Isaac Jessywealth",
+    "Igoche Jacey",
+    "Micheal Uwana Benedict",
+    "Mustapha Abdulnaim",
+    "Kyauta Great Shekwoadye",
+    "Chidienwa Bezalel Ihuoma",
+    "Yakubu Shuaibu Uwako",
+    "Ajeka Shawn-Paul Enemona",
+    "Eze Priscilla C.",
 ]
 
 # Generate student data for Nursery One Diamond
@@ -21,7 +26,7 @@ for i, name in enumerate(nurseryOneDiamond, start=1):
         "Term": "Third Term",
         "Session": "2026/2027",
         "Sex": "Unknown",  # Placeholder for gender
-        "Section": "General"
+        "Section": "Diamond"
     }
     students_data.append(student)
 

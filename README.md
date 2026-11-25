@@ -10,6 +10,29 @@ python -m pip install -r requirements.txt
 python desktop_app.py
 ```
 
+## Desktop downloadable package
+
+On Windows, run:
+
+```powershell
+.\build_windows.ps1
+```
+
+This creates `dist\TPSA Result Manager.exe`. Copy that executable to another
+Windows computer and run it; no Python installation is required.
+
+## Phone and browser installable package
+
+Run the responsive web/PWA server:
+
+```powershell
+.\run_web.ps1
+```
+
+Open `http://<computer-ip>:8000` on the phone while both devices are on the
+same network. In the browser menu choose **Install app** or **Add to Home
+Screen**. HTTPS or localhost is required for full PWA installation.
+
 The local SQLite database is `tpsa.db`. On first initialization, the app creates
 the default administrator (`admin` / `admin123`) and imports the current
 2026/2027 student list if the database has no students. Change the default

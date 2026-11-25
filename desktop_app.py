@@ -5,6 +5,7 @@ import math
 import os
 import sqlite3
 import sys
+import shutil
 from datetime import datetime
 from contextlib import contextmanager, redirect_stdout
 
@@ -14,6 +15,7 @@ from tkinter import BooleanVar, filedialog, messagebox
 from werkzeug.security import check_password_hash, generate_password_hash
 from grade import generate_grade_workbook
 from classes.js.subject import js1_subjects, js2_and_js3_subjects
+from classes.nursery.subject import subjects as nursery_subjects
 from classes.ss.subject import (
     ss1_subjects,
     ss2_and_ss3_art_subjects,
@@ -22,9 +24,24 @@ from classes.ss.subject import (
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.environ.get("TPSA_DATABASE", os.path.join(BASE_DIR, "tpsa.db"))
-OUTPUT_DIR = os.path.join(BASE_DIR, "final_3term_results")
+if getattr(sys, "frozen", False):
+    APP_DATA_DIR = os.environ.get(
+        "TPSA_APP_DATA",
+        os.path.join(os.getenv("LOCALAPPDATA", os.path.expanduser("~")), "TPSA Result Manager"),
+    )
+else:
+    APP_DATA_DIR = BASE_DIR
+os.makedirs(APP_DATA_DIR, exist_ok=True)
+DATABASE = os.environ.get("TPSA_DATABASE", os.path.join(APP_DATA_DIR, "tpsa.db"))
+OUTPUT_DIR = os.environ.get("TPSA_OUTPUT_DIR", os.path.join(APP_DATA_DIR, "final_3term_results"))
+if getattr(sys, "frozen", False) and not os.path.exists(DATABASE):
+    bundled_database = os.path.join(getattr(sys, "_MEIPASS", BASE_DIR), "tpsa.db")
+    if os.path.exists(bundled_database):
+        shutil.copy2(bundled_database, DATABASE)
 SECONDARY_STUDENT_MODULES = (
+    "classes.nursery.nurseryOneDiamond",
+    "classes.nursery.nurseryOneGold",
+    "classes.nursery.nurseryTwo",
     "classes.js.js1D",
     "classes.js.js1G",
     "classes.js.js2D",
@@ -52,6 +69,8 @@ def load_secondary_students():
 
 
 def secondary_subjects_for(class_name):
+    if class_name.startswith("Nursery "):
+        return nursery_subjects
     if class_name.startswith("JS 1"):
         return js1_subjects
     if class_name.startswith(("JS 2", "JS 3")):
@@ -333,7 +352,11 @@ def init_db():
         for student in load_secondary_students():
             class_name = student["Class"].strip()
             section = student.get("Section", "").strip()
-            if section and not class_name.casefold().endswith(section.casefold()):
+            if (
+                section
+                and section != "General"
+                and not class_name.casefold().endswith(section.casefold())
+            ):
                 class_name = f"{class_name} {section}"
             class_data = secondary_classes.setdefault(
                 class_name,
@@ -349,6 +372,8 @@ def init_db():
             class_id = db.execute(
                 "SELECT id FROM classes WHERE name=?", (class_name,)
             ).fetchone()["id"]
+            if class_name.startswith("Nursery "):
+                db.execute("UPDATE students SET active=0 WHERE class_id=?", (class_id,))
             for subject_name in secondary_subjects_for(class_name):
                 db.execute(
                     "INSERT OR IGNORE INTO subjects(name, class_id) VALUES (?, ?)",
@@ -363,18 +388,35 @@ def init_db():
                     (class_id, assessment_name, maximum, sort_order),
                 )
             for student in class_data["students"]:
-                db.execute(
-                    "INSERT OR IGNORE INTO students"
-                    "(name, admission_no, class_id, sex, session) "
-                    "VALUES (?, ?, ?, ?, ?)",
-                    (
-                        student["Name"],
-                        student["Admission No"],
-                        class_id,
-                        student.get("Sex", "Unknown"),
-                        student.get("Session", "2026/2027"),
-                    ),
-                )
+                if class_name.startswith("Nursery "):
+                    db.execute(
+                        "INSERT INTO students"
+                        "(name, admission_no, class_id, sex, session, active) "
+                        "VALUES (?, ?, ?, ?, ?, 1) "
+                        "ON CONFLICT(admission_no) DO UPDATE SET "
+                        "name=excluded.name, class_id=excluded.class_id, "
+                        "sex=excluded.sex, session=excluded.session, active=1",
+                        (
+                            student["Name"],
+                            student["Admission No"],
+                            class_id,
+                            student.get("Sex", "Unknown"),
+                            student.get("Session", "2026/2027"),
+                        ),
+                    )
+                else:
+                    db.execute(
+                        "INSERT OR IGNORE INTO students"
+                        "(name, admission_no, class_id, sex, session) "
+                        "VALUES (?, ?, ?, ?, ?)",
+                        (
+                            student["Name"],
+                            student["Admission No"],
+                            class_id,
+                            student.get("Sex", "Unknown"),
+                            student.get("Session", "2026/2027"),
+                        ),
+                    )
 
         try:
             from classes.student_data_2026_27 import students as initial_students

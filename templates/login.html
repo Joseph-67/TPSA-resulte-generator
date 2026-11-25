@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-page">
+  <form class="card login-card" method="post">
+    <h1>TPSA Result Admin</h1>
+    {% if error %}<div class="message error">{{ error }}</div>{% endif %}
+    <div class="form-row"><input name="username" placeholder="Username" autocomplete="username" required></div>
+    <div class="form-row"><input name="password" type="password" placeholder="Password" autocomplete="current-password" required></div>
+    <button type="submit">Sign In</button>
+  </form>
+</div>
+{% endblock %}
