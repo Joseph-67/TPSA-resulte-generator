@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Report Card Configuration</h1>
+<form class="card" method="post">
+  <input type="hidden" name="action" value="save">
+  <h2>School and Session</h2>
+  <div class="form-row">
+    <label>School name<input name="school_name" value="{{ values.get('school_name','') }}" required></label>
+    <label>Academic session<input name="session" value="{{ values.get('session','') }}" placeholder="YYYY/YYYY" required></label>
+    <label>Resumption date<input type="date" name="resumption_date" value="{{ values.get('resumption_date','') }}" required></label>
+    <label>Closing date<input type="date" name="closing_date" value="{{ values.get('closing_date','') }}" required></label>
+  </div>
+  <h2>Grade Boundaries (minimum score)</h2>
+  <div class="form-row">
+    {% for key,label in [('grade_a_min','A'),('grade_b_min','B'),('grade_c_min','C'),('grade_d_min','D'),('grade_e_min','E')] %}
+      <label>{{ label }}<input type="number" name="{{ key }}" min="0" max="100" step="0.01" value="{{ values.get(key,'0') }}" required></label>
+    {% endfor %}
+  </div>
+  <h2>Optional Report Columns</h2>
+  <div class="form-row">
+    {% for key,label in report_fields %}
+      <label><input type="checkbox" name="{{ key }}" {% if values.get(key,'1')=='1' %}checked{% endif %}> {{ label }}</label>
+    {% endfor %}
+  </div>
+  <button type="submit">Save Report Card Configuration</button>
+</form>
+
+<section class="card" style="margin-top:1rem">
+  <h2>Assessment Columns</h2>
+  <form class="toolbar" method="get">
+    <select name="class_id">{% for item in classes %}<option value="{{ item.id }}" {% if item.id==selected_class %}selected{% endif %}>{{ item.name }}</option>{% endfor %}</select>
+    <button type="submit">Load Class</button>
+  </form>
+  {% if selected_class %}
+  <form method="post">
+    <input type="hidden" name="action" value="save_assessments">
+    <input type="hidden" name="class_id" value="{{ selected_class }}">
+    <div class="table-wrap">
+      <table><thead><tr><th>Column</th><th>Maximum</th><th>Included</th></tr></thead>
+      <tbody>{% for item in assessments %}
+        <tr><td>{{ item.name }}</td><td><input type="number" name="max_{{ item.id }}" min="0.01" step="0.01" value="{{ item.max_score }}" required></td><td><input type="checkbox" name="active_{{ item.id }}" {% if item.active %}checked{% endif %}></td></tr>
+      {% endfor %}</tbody></table>
+    </div>
+    <p>Included assessment maximums must total 100.</p>
+    <button type="submit">Save Assessment Columns</button>
+  </form>
+  <form class="form-row" method="post">
+    <input type="hidden" name="action" value="add_assessment"><input type="hidden" name="class_id" value="{{ selected_class }}">
+    <input name="assessment_name" placeholder="Column name" required>
+    <input type="number" name="assessment_max" min="0.01" step="0.01" placeholder="Maximum mark" required>
+    <button type="submit">Add Assessment Column</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

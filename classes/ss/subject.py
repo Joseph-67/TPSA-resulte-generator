@@ -8,6 +8,7 @@ ss1_subjects = [
     "Hausa",
     "Biology",
     "Livestock Farming",
+    "Agricultural Science",
     "Digital Technology",
     "Phonics",
     "Chemistry",
@@ -26,6 +27,7 @@ ss2_and_ss3_art_subjects = [
     "Hausa",
     "Biology",
     "Livestock Farming",
+    "Agricultural Science",
     "Digital Technology",
     "Phonics",
 ]
@@ -38,6 +40,7 @@ ss2_and_ss3_science_subjects = [
     "Biology",
     "Citizenship & Heritage Studies",
     "Livestock Farming",
+    "Agricultural Science",
     "Geography",
     "F/Maths",
     "Digital Technology",

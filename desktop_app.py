@@ -33,7 +33,11 @@ else:
     APP_DATA_DIR = BASE_DIR
 os.makedirs(APP_DATA_DIR, exist_ok=True)
 DATABASE = os.environ.get("TPSA_DATABASE", os.path.join(APP_DATA_DIR, "tpsa.db"))
-OUTPUT_DIR = os.environ.get("TPSA_OUTPUT_DIR", os.path.join(APP_DATA_DIR, "final_3term_results"))
+DOCUMENTS_DIR = os.path.join(os.path.expanduser("~"), "Documents")
+OUTPUT_DIR = os.environ.get(
+    "TPSA_OUTPUT_DIR",
+    os.path.join(DOCUMENTS_DIR, "TPSA", "final_3term_results"),
+)
 if getattr(sys, "frozen", False) and not os.path.exists(DATABASE):
     bundled_database = os.path.join(getattr(sys, "_MEIPASS", BASE_DIR), "tpsa.db")
     if os.path.exists(bundled_database):
@@ -125,6 +129,11 @@ def init_db():
                 active INTEGER NOT NULL DEFAULT 1,
                 UNIQUE(name, class_id),
                 FOREIGN KEY(class_id) REFERENCES classes(id)
+            );
+            CREATE TABLE IF NOT EXISTS subject_catalog (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                active INTEGER NOT NULL DEFAULT 1
             );
             CREATE TABLE IF NOT EXISTS students (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -445,6 +454,10 @@ def init_db():
                     "VALUES (?, ?, ?, ?)",
                     (name, f"{admission_prefix}/{index:03d}", class_row["id"], "2026/2027")
                 )
+        db.execute(
+            "INSERT OR IGNORE INTO subject_catalog(name) "
+            "SELECT DISTINCT name FROM subjects"
+        )
 
 
 class LoginFrame(ctk.CTkFrame):
@@ -491,9 +504,12 @@ class MainFrame(ctk.CTkFrame):
 
         buttons = [
             ("Dashboard", self.show_dashboard),
+            ("Classes", self.show_classes),
             ("Students", self.show_students),
+            ("Subjects", self.show_subjects),
+            ("Class Subject Assignment", self.show_subject_assignments),
             ("Results", self.show_results),
-            ("Result Configuration", self.show_config),
+            ("Report Card Config", self.show_config),
             ("Manage Admins", self.show_admins),
         ]
         for label, command in buttons:
@@ -515,7 +531,7 @@ class MainFrame(ctk.CTkFrame):
             counts = [
                 ("Students", db.execute("SELECT COUNT(*) FROM students WHERE active=1").fetchone()[0]),
                 ("Classes", db.execute("SELECT COUNT(*) FROM classes WHERE active=1").fetchone()[0]),
-                ("Subjects", db.execute("SELECT COUNT(*) FROM subjects WHERE active=1").fetchone()[0]),
+                ("Subjects", db.execute("SELECT COUNT(*) FROM subject_catalog WHERE active=1").fetchone()[0]),
                 ("Result Records", db.execute("SELECT COUNT(*) FROM result_scores").fetchone()[0]),
             ]
         cards = ctk.CTkFrame(self.content, fg_color="transparent")
@@ -532,6 +548,269 @@ class MainFrame(ctk.CTkFrame):
         self.generate_class.pack(anchor="w", padx=12, pady=5)
         ctk.CTkLabel(self.content, text="Generates a workbook with first-, second-, and third-term sheets for every active student.").pack(anchor="w", padx=12, pady=4)
         ctk.CTkButton(self.content, text="Generate Workbook", command=self.generate_workbook).pack(anchor="w", padx=12, pady=8)
+
+    def show_classes(self):
+        self.clear_content()
+        ctk.CTkLabel(
+            self.content, text="Manage Classes",
+            font=ctk.CTkFont(size=24, weight="bold"),
+        ).pack(anchor="w", padx=12, pady=(8, 12))
+
+        form = ctk.CTkFrame(self.content)
+        form.pack(fill="x", padx=12, pady=8)
+        name_entry = ctk.CTkEntry(form, width=240, placeholder_text="Class name")
+        name_entry.grid(row=0, column=0, padx=8, pady=8)
+        section_entry = ctk.CTkEntry(form, width=180, placeholder_text="Section")
+        section_entry.insert(0, "General")
+        section_entry.grid(row=0, column=1, padx=8, pady=8)
+
+        def add_class():
+            name = name_entry.get().strip()
+            section = section_entry.get().strip() or "General"
+            if not name:
+                messagebox.showwarning("Class Required", "Enter a class name.")
+                return
+            try:
+                with get_db() as db:
+                    class_id = db.execute(
+                        "INSERT INTO classes(name, section) VALUES (?, ?)",
+                        (name, section),
+                    ).lastrowid
+                    default_subjects = [
+                        "English Studies", "Mathematics", "Phonics",
+                        "Basic Science & Technology", "Social & Citizenship Studies",
+                        "French", "Cultural & Creative Art", "Physical & Health Education",
+                        "CRS/IRS", "History", "Hausa", "Handwriting",
+                    ]
+                    if name in ("Grade Four", "Grade Five"):
+                        default_subjects.extend(
+                            ["Pre-Vocational Studies", "Basic Digital Literacy"]
+                        )
+                    for subject_name in default_subjects:
+                        db.execute(
+                            "INSERT OR IGNORE INTO subjects(name, class_id) VALUES (?, ?)",
+                            (subject_name, class_id),
+                        )
+                        db.execute(
+                            "INSERT OR IGNORE INTO subject_catalog(name) VALUES (?)",
+                            (subject_name,),
+                        )
+                    for order, (column, key) in enumerate((
+                        ("CA1", "ca1_max"), ("CA2", "ca2_max"),
+                        ("CA3", "ca3_max"), ("EXAM", "exam_max"),
+                    ), 1):
+                        maximum = float(db.execute(
+                            "SELECT value FROM config WHERE key=?", (key,)
+                        ).fetchone()[0])
+                        db.execute(
+                            "INSERT INTO assessment_columns"
+                            "(class_id, name, max_score, sort_order) VALUES (?, ?, ?, ?)",
+                            (class_id, column, maximum, order),
+                        )
+                    db.commit()
+                messagebox.showinfo("Class Added", f"{name} was added.")
+                self.show_classes()
+            except sqlite3.IntegrityError:
+                messagebox.showerror("Duplicate Class", "That class already exists.")
+
+        ctk.CTkButton(form, text="Add Class", command=add_class).grid(
+            row=0, column=2, padx=8, pady=8
+        )
+        table = ctk.CTkScrollableFrame(self.content)
+        table.pack(fill="both", expand=True, padx=12, pady=10)
+        with get_db() as db:
+            class_rows = db.execute("""
+                SELECT c.*, COUNT(s.id) AS student_count
+                FROM classes c LEFT JOIN students s ON s.class_id=c.id AND s.active=1
+                GROUP BY c.id ORDER BY c.name
+            """).fetchall()
+        for column, title in enumerate(("Class", "Section", "Students", "Status", "Action")):
+            ctk.CTkLabel(table, text=title, font=ctk.CTkFont(weight="bold")).grid(
+                row=0, column=column, padx=8, pady=6, sticky="w"
+            )
+        for index, class_row in enumerate(class_rows, 1):
+            for column, value in enumerate((
+                class_row["name"], class_row["section"], class_row["student_count"],
+                "Active" if class_row["active"] else "Inactive",
+            )):
+                ctk.CTkLabel(table, text=str(value)).grid(
+                    row=index, column=column, padx=8, pady=5, sticky="w"
+                )
+
+            def toggle_class(class_id=class_row["id"], active=class_row["active"]):
+                if active and not messagebox.askyesno(
+                    "Deactivate Class",
+                    "The class and its students/results will be retained. Continue?",
+                ):
+                    return
+                with get_db() as db:
+                    db.execute("UPDATE classes SET active=? WHERE id=?", (0 if active else 1, class_id))
+                self.show_classes()
+
+            ctk.CTkButton(
+                table, text="Deactivate" if class_row["active"] else "Reactivate",
+                width=100, command=toggle_class,
+                fg_color="#8a3434" if class_row["active"] else "#287447",
+            ).grid(row=index, column=4, padx=8, pady=4)
+
+    def show_subjects(self):
+        self.clear_content()
+        ctk.CTkLabel(
+            self.content, text="Manage Subjects",
+            font=ctk.CTkFont(size=24, weight="bold"),
+        ).pack(anchor="w", padx=12, pady=(8, 12))
+        ctk.CTkLabel(
+            self.content,
+            text="Maintain the subject catalogue here, then assign subjects to classes in Class Subject Assignment.",
+        ).pack(anchor="w", padx=12, pady=(0, 8))
+        form = ctk.CTkFrame(self.content)
+        form.pack(fill="x", padx=12, pady=8)
+        name_entry = ctk.CTkEntry(form, width=320, placeholder_text="New subject name")
+        name_entry.pack(side="left", padx=8, pady=8)
+
+        def add_subject():
+            name = name_entry.get().strip()
+            if not name:
+                messagebox.showwarning("Subject Required", "Enter a subject name.")
+                return
+            try:
+                with get_db() as db:
+                    db.execute("INSERT INTO subject_catalog(name) VALUES (?)", (name,))
+                self.show_subjects()
+            except sqlite3.IntegrityError:
+                messagebox.showerror("Duplicate Subject", "That subject is already in the catalogue.")
+
+        ctk.CTkButton(form, text="Add Subject", command=add_subject).pack(
+            side="left", padx=8, pady=8
+        )
+        table = ctk.CTkScrollableFrame(self.content)
+        table.pack(fill="both", expand=True, padx=12, pady=10)
+        with get_db() as db:
+            rows = db.execute("""
+                SELECT sc.*, COUNT(s.id) AS assigned_count
+                FROM subject_catalog sc
+                LEFT JOIN subjects s ON s.name=sc.name AND s.active=1
+                GROUP BY sc.id ORDER BY sc.name
+            """).fetchall()
+        for column, title in enumerate(("Subject", "Assigned Classes", "Status", "Action")):
+            ctk.CTkLabel(table, text=title, font=ctk.CTkFont(weight="bold")).grid(
+                row=0, column=column, padx=8, pady=6, sticky="w"
+            )
+        for index, row in enumerate(rows, 1):
+            for column, value in enumerate((
+                row["name"], row["assigned_count"],
+                "Active" if row["active"] else "Inactive",
+            )):
+                ctk.CTkLabel(table, text=str(value)).grid(
+                    row=index, column=column, padx=8, pady=5, sticky="w"
+                )
+
+            def toggle_subject(subject_id=row["id"], active=row["active"], name=row["name"]):
+                with get_db() as db:
+                    db.execute(
+                        "UPDATE subject_catalog SET active=? WHERE id=?",
+                        (0 if active else 1, subject_id),
+                    )
+                    if active:
+                        db.execute("UPDATE subjects SET active=0 WHERE name=?", (name,))
+                self.show_subjects()
+
+            ctk.CTkButton(
+                table, text="Deactivate" if row["active"] else "Reactivate",
+                width=100, command=toggle_subject,
+                fg_color="#8a3434" if row["active"] else "#287447",
+            ).grid(row=index, column=3, padx=8, pady=4)
+
+    def show_subject_assignments(self):
+        self.clear_content()
+        ctk.CTkLabel(
+            self.content, text="Assign Subjects to Classes",
+            font=ctk.CTkFont(size=24, weight="bold"),
+        ).pack(anchor="w", padx=12, pady=(8, 12))
+        with get_db() as db:
+            classes = db.execute(
+                "SELECT id, name FROM classes WHERE active=1 ORDER BY name"
+            ).fetchall()
+            catalog = db.execute(
+                "SELECT id, name FROM subject_catalog WHERE active=1 ORDER BY name"
+            ).fetchall()
+        controls = ctk.CTkFrame(self.content)
+        controls.pack(fill="x", padx=12, pady=8)
+        class_picker = ctk.CTkComboBox(
+            controls, values=[row["name"] for row in classes], width=220
+        )
+        if classes:
+            class_picker.set(classes[0]["name"])
+        class_picker.pack(side="left", padx=8, pady=8)
+        subject_picker = ctk.CTkComboBox(
+            controls, values=[row["name"] for row in catalog], width=260
+        )
+        if catalog:
+            subject_picker.set(catalog[0]["name"])
+        subject_picker.pack(side="left", padx=8, pady=8)
+
+        def assign_subject():
+            class_row = next(
+                (row for row in classes if row["name"] == class_picker.get()), None
+            )
+            subject_name = subject_picker.get()
+            if not class_row or not any(row["name"] == subject_name for row in catalog):
+                messagebox.showwarning("Select Items", "Choose a class and catalogue subject.")
+                return
+            with get_db() as db:
+                assignment = db.execute(
+                    "SELECT id FROM subjects WHERE class_id=? AND name=?",
+                    (class_row["id"], subject_name),
+                ).fetchone()
+                if assignment:
+                    db.execute(
+                        "UPDATE subjects SET active=1 WHERE id=?", (assignment["id"],)
+                    )
+                else:
+                    db.execute(
+                        "INSERT INTO subjects(name, class_id) VALUES (?, ?)",
+                        (subject_name, class_row["id"]),
+                    )
+            messagebox.showinfo("Subject Assigned", f"{subject_name} assigned to {class_row['name']}.")
+            self.show_subject_assignments()
+
+        ctk.CTkButton(
+            controls, text="Assign Subject", command=assign_subject
+        ).pack(side="left", padx=8, pady=8)
+        table = ctk.CTkScrollableFrame(self.content)
+        table.pack(fill="both", expand=True, padx=12, pady=10)
+        with get_db() as db:
+            assignments = db.execute("""
+                SELECT s.id, s.name, s.active, c.name AS class_name
+                FROM subjects s JOIN classes c ON c.id=s.class_id
+                ORDER BY c.name, s.name
+            """).fetchall()
+        for column, title in enumerate(("Class", "Subject", "Status", "Action")):
+            ctk.CTkLabel(table, text=title, font=ctk.CTkFont(weight="bold")).grid(
+                row=0, column=column, padx=8, pady=6, sticky="w"
+            )
+        for index, row in enumerate(assignments, 1):
+            for column, value in enumerate((
+                row["class_name"], row["name"],
+                "Active" if row["active"] else "Inactive",
+            )):
+                ctk.CTkLabel(table, text=str(value)).grid(
+                    row=index, column=column, padx=8, pady=5, sticky="w"
+                )
+
+            def toggle_assignment(assignment_id=row["id"], active=row["active"]):
+                with get_db() as db:
+                    db.execute(
+                        "UPDATE subjects SET active=? WHERE id=?",
+                        (0 if active else 1, assignment_id),
+                    )
+                self.show_subject_assignments()
+
+            ctk.CTkButton(
+                table, text="Unassign" if row["active"] else "Restore",
+                width=100, command=toggle_assignment,
+                fg_color="#8a3434" if row["active"] else "#287447",
+            ).grid(row=index, column=3, padx=8, pady=4)
 
     def show_students(self):
         self.clear_content()
@@ -583,28 +862,47 @@ class MainFrame(ctk.CTkFrame):
         with get_db() as db:
             students = db.execute(
                 "SELECT s.*, c.name AS class_name FROM students s "
-                "JOIN classes c ON c.id=s.class_id WHERE s.active=1 ORDER BY c.name, s.name"
+                "JOIN classes c ON c.id=s.class_id ORDER BY c.name, s.name"
             ).fetchall()
-        for column, title in enumerate(("Name", "Admission No", "Class", "Session", "Action")):
+        for column, title in enumerate(
+            ("Name", "Admission No", "Class", "Session", "Status", "Action")
+        ):
             ctk.CTkLabel(table_frame, text=title, font=ctk.CTkFont(weight="bold")).grid(row=0, column=column, padx=12, pady=6, sticky="w")
         for row_number, student in enumerate(students, 1):
             ctk.CTkLabel(table_frame, text=student["name"]).grid(row=row_number, column=0, padx=12, pady=4, sticky="w")
             ctk.CTkLabel(table_frame, text=student["admission_no"]).grid(row=row_number, column=1, padx=12, pady=4, sticky="w")
             ctk.CTkLabel(table_frame, text=student["class_name"]).grid(row=row_number, column=2, padx=12, pady=4, sticky="w")
             ctk.CTkLabel(table_frame, text=student["session"]).grid(row=row_number, column=3, padx=12, pady=4, sticky="w")
+            ctk.CTkLabel(
+                table_frame,
+                text="Active" if student["active"] else "Inactive",
+            ).grid(row=row_number, column=4, padx=12, pady=4, sticky="w")
 
-            def deactivate_student(student_id=student["id"], student_name=student["name"]):
-                if not messagebox.askyesno("Deactivate Student", f"Deactivate {student_name}? Existing results will be retained."):
+            def toggle_student(
+                student_id=student["id"],
+                student_name=student["name"],
+                active=student["active"],
+            ):
+                if active and not messagebox.askyesno(
+                    "Deactivate Student",
+                    f"Deactivate {student_name}? Existing results will be retained.",
+                ):
                     return
                 with get_db() as db:
-                    db.execute("UPDATE students SET active=0 WHERE id=?", (student_id,))
+                    db.execute(
+                        "UPDATE students SET active=? WHERE id=?",
+                        (0 if active else 1, student_id),
+                    )
                     db.commit()
                 self.show_students()
 
             ctk.CTkButton(
-                table_frame, text="Deactivate", width=90, fg_color="#8a3434",
-                command=deactivate_student
-            ).grid(row=row_number, column=4, padx=8, pady=4)
+                table_frame,
+                text="Deactivate" if student["active"] else "Reactivate",
+                width=100,
+                fg_color="#8a3434" if student["active"] else "#287447",
+                command=toggle_student,
+            ).grid(row=row_number, column=5, padx=8, pady=4)
 
     def upload_students(self, selected_class):
         path = filedialog.askopenfilename(filetypes=[("Student Data", "*.csv *.xlsx")])
@@ -766,7 +1064,7 @@ class MainFrame(ctk.CTkFrame):
 
     def show_config(self):
         self.clear_content()
-        ctk.CTkLabel(self.content, text="Result Configuration", font=ctk.CTkFont(size=24, weight="bold")).pack(anchor="w", padx=12, pady=(8, 12))
+        ctk.CTkLabel(self.content, text="Report Card Configuration", font=ctk.CTkFont(size=24, weight="bold")).pack(anchor="w", padx=12, pady=(8, 12))
         with get_db() as db:
             values = dict(db.execute("SELECT key, value FROM config").fetchall())
             classes = db.execute(
@@ -1050,6 +1348,11 @@ class MainFrame(ctk.CTkFrame):
                             "INSERT OR IGNORE INTO subjects(name, class_id) VALUES (?, ?)",
                             (subject_name, class_id)
                         )
+                        db.execute(
+                            "INSERT INTO subject_catalog(name) VALUES (?) "
+                            "ON CONFLICT(name) DO UPDATE SET active=1",
+                            (subject_name,),
+                        )
                     for sort_order, (assessment_name, maximum_key) in enumerate((
                         ("CA1", "ca1_max"),
                         ("CA2", "ca2_max"),
@@ -1081,6 +1384,11 @@ class MainFrame(ctk.CTkFrame):
                 return
             try:
                 with get_db() as db:
+                    db.execute(
+                        "INSERT INTO subject_catalog(name) VALUES (?) "
+                        "ON CONFLICT(name) DO UPDATE SET active=1",
+                        (name,),
+                    )
                     db.execute("INSERT INTO subjects(name, class_id) VALUES (?, ?)", (name, class_row["id"]))
                     db.commit()
                 messagebox.showinfo("Added", f"{name} added to {selected}.")

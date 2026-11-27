@@ -9,7 +9,13 @@
   <button type="submit">Add Student</button>
 </form>
 <div class="table-wrap">
-  <table><thead><tr><th>Name</th><th>Admission No</th><th>Class</th><th>Sex</th></tr></thead>
-  <tbody>{% for student in students %}<tr><td>{{ student.name }}</td><td>{{ student.admission_no }}</td><td>{{ student.class_name }}</td><td>{{ student.sex }}</td></tr>{% endfor %}</tbody></table>
+  <table><thead><tr><th>Name</th><th>Admission No</th><th>Class</th><th>Sex</th><th>Status</th><th>Action</th></tr></thead>
+  <tbody>{% for student in students %}
+    <tr>
+      <td>{{ student.name }}</td><td>{{ student.admission_no }}</td><td>{{ student.class_name }}</td><td>{{ student.sex }}</td>
+      <td>{{ "Active" if student.active else "Inactive" }}</td>
+      <td><form method="post"><input type="hidden" name="student_id" value="{{ student.id }}"><button name="action" value="toggle" type="submit">{{ "Deactivate" if student.active else "Reactivate" }}</button></form></td>
+    </tr>
+  {% endfor %}</tbody></table>
 </div>
 {% endblock %}

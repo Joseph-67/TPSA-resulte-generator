@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Manage Subjects</h1>
+<p>Maintain the subject catalogue here, then assign subjects to classes in Assignments.</p>
+<form class="card form-row" method="post">
+  <input name="name" placeholder="Subject name" required>
+  <button type="submit">Add Subject</button>
+</form>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Subject</th><th>Assigned Classes</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>{% for item in subjects %}
+      <tr>
+        <td>{{ item.name }}</td><td>{{ item.assigned_count }}</td>
+        <td>{{ "Active" if item.active else "Inactive" }}</td>
+        <td><form method="post"><input type="hidden" name="subject_id" value="{{ item.id }}"><button name="action" value="toggle" type="submit">{{ "Deactivate" if item.active else "Reactivate" }}</button></form></td>
+      </tr>
+    {% endfor %}</tbody>
+  </table>
+</div>
+{% endblock %}

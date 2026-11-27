@@ -54,6 +54,10 @@ password immediately from **Manage Admins**.
   average, prior-term scores, cumulative score, grade, position, and remark).
 - Configure A–F minimum-grade thresholds.
 - Add classes and class-specific subjects; deactivate subjects no longer used.
+- Manage classes, students, the subject catalogue, and class-subject assignments
+  from their dedicated sections in the desktop app and web/PWA.
+- Configure report-card school/session details, grade boundaries, assessment
+  columns, and optional report fields.
 - Load the configured JS and SS student cohorts and subjects into the desktop
   database during initialization, including existing databases with students.
 - Enter and save scores separately for each of the three terms.
@@ -61,4 +65,4 @@ password immediately from **Manage Admins**.
   for every active student in the selected class and configured session.
 
 Generated workbooks are saved in
-`final_3term_results\<start-year>-<end-year-short>\`.
+`Documents\TPSA\final_3term_results\<start-year>-<end-year-short>\`.
