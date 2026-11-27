@@ -29,6 +29,7 @@ else:
 base_class_name = class_name.replace(" Gold", "").replace(" Diamond", "")
 grade_numbers = {
     "Pre-Nursery One": 0,
+    "Pre-Nursery Two": 0,
     "Grade One": 1,
     "Grade Two": 2,
     "Grade Three": 3,
@@ -38,6 +39,7 @@ grade_numbers = {
 grade_number = grade_numbers[base_class_name]
 admission_prefix = {
     "Pre-Nursery One": "PN",
+    "Pre-Nursery Two": "PN2",
     "Grade One Diamond": "G1",
     "Grade One Gold": "G1G",
     "Grade Two Gold": "G2G",

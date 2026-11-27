@@ -1,26 +1,42 @@
 # List of student names for Pre-Nursery II
 preNurseryTwo = [
-    "Ameh Telvin",
-    "Itodo Prevail Ojumeyi",
-    "Echekwu Kristine Chiaodi",
-    "Assi Vitallis Abba",
-    "Theophilus Ekerini Ekong",
-    "Amaizu Bryan Chiemela",
-    "Nze Chidiebere Derick",
-    "Awa Adriel Obasioma",
-    "Dalama David Oluwafemi",
-    "Kayode Tiseoluwa",
-    "Mgbemena Jidenna Kanu",
-    "Oliver Valentine Chimnadindu",
-    "Osaywamen Ethan Ehosa",
-    "Ismail Habiba",
-    "Idris Mohammed Zainab",
-    "Sanusi Mohammad Moshood"
+    "Adakole Asher Frank",
+    "Abbey Jesse Excel",
+    "Abel Arabella Ojonemile",
+    "Ajibola Zeenat",
+    "Adewumi Shalom Oluwamurewa",
+    "Bulus Elizabeth Excel",
+    "Chigereokwu Esther Amarachi",
+    "Dalamu Jeshurun Femi",
+    "Enyinnaya Josiah Chimeremeze",
+    "Emmanuel Arielle En'ada",
+    "Ejigah Tiffany",
+    "Ismail Rahama",
+    "Johnson Uriel",
+    "John Eliana Ifeoma",
+    "John Jesse Ojochegbe",
+    "Mudiaga Eliana",
+    "Muhammad Khadija Aroke",
+    "Nnanenwu Chinecherem Susan",
+    "Nnaemeka Janick",
+    "Nkemakolam Peculiar",
+    "Nwasike Jesse",
+    "Negedu Raphael Enyo-ojo",
+    "Okechukwu Chukwudubem Dominion",
+    "Oladipupo Anajah",
+    "Osagiede Tobechukwu Triumph",
+    "Odumah Eugene Odionosele",
+    "Onyemaobinna Creed Naetochukwu",
+    "Onyekachi Chiamaka Jennifer",
+    "Opakunle Victory Olamidunsy",
+    "Olufemi Divine-Favour",
+    "Solomon Jovani Jakada",
+    "Yahaya Abdullahi Adams"
 ]
 
 # Generate student data for Pre-Nursery II
 students_data = []
-for i, name in enumerate(preNurseryII, start=1):
+for i, name in enumerate(preNurseryTwo, start=1):
     student = {
         "Name": name.strip(),
         "Admission No": f"PN2/{str(i).zfill(3)}",

@@ -221,6 +221,7 @@ def init_db():
 
         classes = [
             ("Pre-Nursery One", "General"),
+            ("Pre-Nursery Two", "General"),
             ("Grade One Diamond", "Diamond"),
             ("Grade One Gold", "Gold"),
             ("Grade Two Gold", "Gold"),
@@ -439,6 +440,7 @@ def init_db():
                 continue
             admission_prefix = {
                 "Pre-Nursery One": "PN",
+                "Pre-Nursery Two": "PN2",
                 "Grade One Diamond": "G1",
                 "Grade One Gold": "G1G",
                 "Grade Two Gold": "G2G",
